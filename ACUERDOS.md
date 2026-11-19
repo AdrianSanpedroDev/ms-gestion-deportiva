@@ -1420,10 +1420,11 @@ NOTIFICACIONES_CORREOS_PRUEBA=correo1@gmail.com,correo2@gmail.com
 ### Fase 0a: esqueleto. Nadie empieza sus HU hasta que esté en `main`.
 
 **Repo (Adrián, B): se parte de `ms-cinema`**
-- [ ] Copiar la carpeta **local** de `ms-cinema` de Adrián (la de GitHub no tiene el `SecurityGuard` ni las guías 4 a 6), **sin** `.git`, `node_modules`, `dist` ni `.env`.
-- [ ] Borrar todo lo del cine: módulos `theaters`, `projectors`, `seats`, `movies`, `screenings`, `src/migrations/` (si no, se crearían las tablas del cine), `src/gateways/`, `clientSocket.py`, `AGENTS.md`, `app.controller*`, `app.service.ts` y `test/app.e2e-spec.ts`. Las guías se dejan en `docs/guias/` como referencia.
-- [ ] Renombrar a `ms-gestion-deportiva` (`package.json` y `package-lock.json`), base `gestion_deportiva_db` en `typeorm.config.ts` y `.env.example` (10.6), y dejar `app.module.ts` solo con `ConfigModule`, `TypeOrmModule` y el `SecurityGuard`.
-- [ ] Mover `ACUERDOS.md` y `HISTORIAS_USUARIO.md` a la raíz, comprobar que `npm run build` compila, crear el repo en GitHub, subirlo y agregar a Nicolás y Andrei como colaboradores. Desde ahí A completa el esqueleto.
+- [x] Copiar la carpeta **local** de `ms-cinema` de Adrián (la de GitHub no tiene el `SecurityGuard` ni las guías 4 a 6), **sin** `.git`, `node_modules`, `dist` ni `.env`.
+- [x] Borrar todo lo del cine: módulos `theaters`, `projectors`, `seats`, `movies`, `screenings`, `src/migrations/` (si no, se crearían las tablas del cine), `src/gateways/`, `clientSocket.py`, `AGENTS.md`, `app.controller*`, `app.service.ts` y `test/app.e2e-spec.ts`. Las guías se dejan en `docs/guias/` como referencia.
+- [x] Renombrar a `ms-gestion-deportiva` (`package.json` y `package-lock.json`), base `gestion_deportiva_db` en `typeorm.config.ts` y `.env.example` (10.6), y dejar `app.module.ts` solo con `ConfigModule`, `TypeOrmModule` y el `SecurityGuard`.
+- [x] Mover `ACUERDOS.md` y `HISTORIAS_USUARIO.md` a la raíz, comprobar que `npm run build` compila y arranca contra `gestion_deportiva_db`, y subirlo a GitHub (19/11, commit `08ac59c`).
+- [ ] Agregar a Nicolás y Andrei como colaboradores. Desde ahí A completa el esqueleto.
 
 **`ms-gestion-deportiva` (A)**
 - [ ] Las dependencias ya vienen de `ms-cinema` (`@nestjs/config`, `@nestjs/typeorm`, `typeorm`, `mysql2`, `class-validator`, `class-transformer`, `axios`). Sobran `@nestjs/websockets`, `@nestjs/platform-socket.io` y `socket.io` (se pueden quitar o dejar para la entrega 3).
@@ -1490,7 +1491,7 @@ Se levantan los cinco procesos:
 | `ms_security` | `Kippie01PW/ProyectoDesarrolloBackend` |
 | `frontend-app` | `zdv01/frontend-app` |
 | `ms-notifications` | `zdv01/ms-notifications` |
-| `ms-gestion-deportiva` | **Por crear** (Adrián, Fase 0a) |
+| `ms-gestion-deportiva` | [`AdrianSanpedroDev/ms-gestion-deportiva`](https://github.com/AdrianSanpedroDev/ms-gestion-deportiva) (creado por Adrián el 19/11) |
 
 - Como en la entrega 1: `main` es lo que se entrega y **solo se cambia por Pull Request**. Cada persona trabaja en su rama `feature/<letra>-<tema>` (ej.: `feature/B-partidos`) y otra persona le da una mirada rápida al PR antes del merge.
 - Antes de empezar cada día: `git pull origin main` en tu rama.
