@@ -87,7 +87,7 @@ Columnas: **Ent** = entidad/migración · **API** = endpoints backend · **Front
 | GD-01 | Deportes | A | ⬜ | ⬜ | — | ⬜ | ⬜ | |
 | GD-02 | Equipos | A | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | |
 | GD-03 | Equipo ↔ Deporte | A | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | |
-| GD-04 | Jugadores | B | 🟡 entidad lista, falta migración | 🟡 completo y probado (51 pruebas); espera `common/` de A | ⬜ | ⬜ | ⬜ | `feature/B-jugadores` (local) |
+| GD-04 | Jugadores | B | 🟡 entidad lista, falta migración | ✅ en `main` (51 pruebas) · ⚠️ no compila hasta que A suba `common/` | ⬜ | ⬜ | ⬜ | PR #1 ✅ |
 | GD-05 | Equipo ↔ Jugador | B | ⛔ espera `Equipo` | ⬜ | ⬜ | ⬜ | ⬜ | |
 | GD-06 | Habilidades | B | ⬜ | ⬜ | — | ⬜ | ⬜ | |
 | GD-07 | Habilidad ↔ Jugador | C | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | |
@@ -109,7 +109,8 @@ Qué necesita cada uno de otro. El dueño marca ✅ cuando lo sube a `main`.
 
 | Quién lo necesita | Qué | De | Para | Estado |
 |---|---|---|---|---|
-| Todos | `ApplicationException`, `ErrorCase`, `HttpExceptionFilter` | A | Que compile cualquier service | ⬜ |
+| Todos | `ApplicationException`, `ErrorCase`, `HttpExceptionFilter` (archivos `common/errores/application.exception.ts` y `error-case.enum.ts`) | A | Que compile cualquier service · **hoy `main` no compila sin esto** | ⬜ |
+| Todos | `EstadoDto` en `common/dto/estado.dto.ts` | A | `PATCH .../estado` · **`main` no compila sin esto** | ⬜ |
 | Todos | `EstadoDto` y `*Resumen` en `common/dto` | A | DTOs de respuesta y `PATCH .../estado` | ⬜ |
 | Todos | `aFechaHoraIso()`, `hoyBogota()` en `common/utils` | A | Mappers y reglas con "hoy" | ⬜ |
 | Todos | `dateStrings: true` + `timezone` en `app.module.ts` | A | Fechas como texto (ACUERDOS 5.5) | ⬜ |
@@ -144,6 +145,7 @@ Lo más reciente arriba. Una línea por avance: fecha · quién · qué (con PR 
 
 | Fecha | Quién | Avance |
 |---|---|---|
+| 20/11 noche | Adrián | PR #1 (GD-04 jugadores) y PR #2 (este tablero) mergeados a `main`. ⚠️ **`main` no compila** hasta que A suba `common/errores/application.exception.ts`, `common/errores/error-case.enum.ts` y `common/dto/estado.dto.ts` (son los imports que usa `src/jugador`). Mientras tanto, para que compile local: esperar a `common/` o ignorar `src/jugador` |
 | 20/11 noche | Adrián | GD-04 backend completo en `feature/B-jugadores` (sin PR): entidad, DTOs, mapper, service, controller, module, 51 pruebas OK. No compila en `main` hasta que A suba `common/errores` y `common/dto`. Pruebas con `npm test -- src/<modulo>` (no `npx jest`: Nest 12 es ESM) |
 | 20/11 | Adrián | Se crea este archivo. En `main` solo está el esqueleto (`08ac59c`, `84db547`); sin ramas ni PRs de A o C. `ms_security` sin endpoint de validación, `ms-notifications` sin `/api/notifications/send`, front sin cambios de la entrega 2 |
 | 19/11 | Adrián | Repo creado a partir de `ms-cinema` y subido a GitHub (`08ac59c`), link en `ACUERDOS.md` sección 12 (`84db547`) |
