@@ -331,9 +331,16 @@ El `ValidationPipe` global va con `whitelist: true`, `forbidNonWhitelisted: true
 
 ### 5.5 Fechas en las respuestas
 
-TypeORM se configura (en `TypeOrmModule.forRootAsync` y en `typeorm.config.ts`) con `dateStrings: true` y `timezone: '-05:00'` (opciones que TypeORM le pasa a `mysql2`), para que las fechas no se corran por zona horaria. En las entidades, las columnas `DATE` y `DATETIME` se tipan como `string`. En las respuestas:
+TypeORM se configura (en `TypeOrmModule.forRootAsync` y en `typeorm.config.ts`) con `dateStrings: true` y `timezone: '-05:00'` (opciones que TypeORM le pasa a `mysql2`), para que las fechas no se corran por zona horaria. En las entidades:
+
+- Las columnas `DATE` se tipan como `string` y llegan como `"2026-12-05"`.
+- Las columnas `DATETIME` se tipan como **`Date`**. TypeORM 1.1.2 las convierte siempre con `new Date(texto)`, aunque `dateStrings` esté activo (`node_modules/typeorm/driver/mysql/MysqlDriver.js`, `prepareHydratedValue`). Si se tipan como `string`, `fechaCreacion.replace(...)` da 500.
+- Las `@CreateDateColumn` llevan `precision: 0` y `default: () => 'CURRENT_TIMESTAMP'`, para que sean `DATETIME` sin microsegundos. Sin eso, TypeORM pone `DATETIME(6)`.
+
+En las respuestas:
+
 - Las columnas `DATE` salen como `"2026-12-05"`.
-- Las columnas `DATETIME` salen como `"2026-12-05T15:30:00"`. El mapper usa `aFechaHoraIso()` de `common/utils/` para convertir `"2026-12-05 15:30:00"`.
+- Las columnas `DATETIME` salen como `"2026-12-05T15:30:00"`. El mapper usa `aFechaHoraIso(valor: Date | string)` de `common/utils/`. **Tiene que aceptar `Date`**: arma el texto con los getters locales (`getFullYear`, `getMonth() + 1`, `getDate`, `getHours`…). Si llega un `string`, reemplaza el espacio por `T`.
 
 ### 5.6 DTOs compartidos (en `common/dto/`, Fase 0, no se modifican)
 
@@ -572,7 +579,7 @@ export abstract class Fase {   // "clase abstracta": nunca existe una Fase que n
 
   @Column({ type: 'varchar', length: 100 }) nombre!: string;
   @Column({ type: 'int' }) orden!: number;
-  @CreateDateColumn({ name: 'fecha_creacion', type: 'datetime' }) fechaCreacion!: string;
+  @CreateDateColumn({ name: 'fecha_creacion', type: 'datetime', precision: 0, default: () => 'CURRENT_TIMESTAMP' }) fechaCreacion!: Date; // DATETIME llega como Date (5.5)
 }
 
 @ChildEntity(TipoFase.GRUPO)
@@ -1514,3 +1521,72 @@ Se levantan los cinco procesos:
 | | Versión inicial (16 HU: Anexos 2 y 3) | |
 | 18/11/2026 | Ajuste a lo que ya existe: NestJS + TypeORM con migraciones (guías del curso), herencia de `Fase` en una sola tabla, formato de error y `errorCase` de `ms_security`, `SecurityGuard` de la guía 5 + endpoint de validación en `ms_security`, correo por `ms-notifications`, estructura real del front, Git sin `develop`. **TypeORM confirmado (18/11)** | Adrián |
 | 18/11/2026 | A = Nicolás, B = Adrián, C = Andrei · Adrián crea el repo · entrega el 24/11 · calendario propuesto | Adrián |
+| 21/11/2026 | 5.5: las columnas DATETIME se tipan como `Date` y `aFechaHoraIso` acepta `Date \| string`. Nueva sección 13 con lo que el código de B ya usa (archivos de `common/` y enums con nombre, configuración de `app.module.ts` y `main.ts`, reglas sobre las entidades de B) | Adrián |
+
+---
+
+## 13. Lo que el código de B ya usa (para no romperlo)
+
+B (Adrián) ya tiene escritos jugadores, contratos, habilidades, partidos y resultados contra este contrato (rama `feature/B-habilidades`). No compilan hasta que existan los archivos de A y C. Esta lista dice **exactamente** qué espera ese código. Si alguno de estos nombres no les sirve, avisen antes de cambiarlo.
+
+### 13.1 Archivos y nombres que B importa
+
+**De A:**
+
+| Archivo | Exporta | Qué usa B |
+|---|---|---|
+| `common/errores/application.exception.ts` | `ApplicationException` | `new ApplicationException(ErrorCase.X, mensaje)` |
+| `common/errores/error-case.enum.ts` | `ErrorCase` | `NOT_FOUND`, `ALREADY_EXISTS`, `INVALID_OPERATION`, `HAS_ASSOCIATIONS` |
+| `common/dto/estado.dto.ts` | `EstadoDto` | `PATCH .../estado` |
+| `common/dto/equipo-resumen.dto.ts` | `EquipoResumen` | `{ id, nombre, activo }` (5.6) |
+| `common/dto/jugador-resumen.dto.ts` | `JugadorResumen` | 5.6 |
+| `common/dto/torneo-resumen.dto.ts` | `TorneoResumen` | `{ id, nombre, estado }` (9.10) |
+| `common/dto/fase-resumen.dto.ts` | `FaseResumen` | `{ id, nombre, tipo, orden }` (9.10) |
+| `common/dto/escenario-resumen.dto.ts` | `EscenarioResumen` | `{ id, nombre }` (9.10) |
+| `common/notificacion/correo.service.ts` | `CorreoService` | `enviar(destinatarios, asunto, html): void` (8) |
+| `common/notificacion/destinatarios.service.ts` | `DestinatariosService` | `aficionadosDeEquipos(localId, visitanteId)` y `aficionadosDelPartido(partidoId)` (8) |
+| `equipo/entities/equipo.entity.ts` | `Equipo` | `id`, `nombre`, `activo` |
+| `torneo/entities/torneo.entity.ts` | `Torneo` | `id`, `nombre`, `estado`, `fechaInicio`, `fechaFin` (DATE, `string`) |
+| `torneo/entities/estado-torneo.enum.ts` | `EstadoTorneo` | `INSCRIPCIONES_CERRADAS`, `EN_CURSO`, `FINALIZADO` |
+| `torneo/entities/inscripcion.entity.ts` | `Inscripcion` | relaciones `torneo` y `equipo` |
+| `escenario/entities/escenario.entity.ts` | `Escenario` | `id`, `nombre` |
+
+**De C:**
+
+| Archivo | Exporta | Qué usa B |
+|---|---|---|
+| `fase/entities/fase.entity.ts` | `Fase` (abstracta), `Grupo`, `FaseFinal` | `id`, `nombre`, `orden`, relación `torneo`. `instanceof Grupo` y `FaseFinal`. En `FaseFinal`: `cantidadEquipos`, `tercerPuesto` |
+| `fase/entities/tipo-fase.enum.ts` | `TipoFase` | `GRUPO`, `FINAL` |
+| `fase/entities/ronda-final.enum.ts` | `RondaFinal` | `DIECISEISAVOS`, `OCTAVOS`, `CUARTOS`, `SEMIFINAL`, `TERCER_PUESTO`, `FINAL` |
+| `fase/entities/grupo-equipo.entity.ts` | `GrupoEquipo` | relaciones `grupo` y `equipo` |
+| `habilidad-jugador/entities/habilidad-jugador.entity.ts` | `HabilidadJugador` | relaciones `jugador` y `habilidad` |
+
+Las rutas de entidades son las de 6.14. Las de `common/` y los enums completan 4.1 y 6.14, que nombraban las clases pero no los archivos.
+
+### 13.2 Lo que A debe configurar para que lo de B funcione
+
+- **`app.module.ts`:**
+  - importar `JugadorModule`, `HabilidadModule` y `PartidoModule`;
+  - TypeORM con `dateStrings: true` y `timezone: '-05:00'` (5.5);
+  - `autoLoadEntities` o las entidades registradas.
+- **`main.ts`:**
+  - `setGlobalPrefix('api')`;
+  - `ValidationPipe` global con `whitelist`, `forbidNonWhitelisted` y `transform`;
+  - un `exceptionFactory` que devuelva **el primer mensaje de cada campo** (5.2). Ojo: `class-validator` reporta primero el decorador **más cercano a la propiedad**.
+- **`NotificacionModule`:** `@Global()` y que exporte `CorreoService` y `DestinatariosService`. B no los registra en sus módulos. `enviar` nunca lanza: si falla, solo registra el error con `Logger`.
+- **`common/utils`:** `hoyBogota()` y `aFechaHoraIso(Date | string)` (5.5). Mientras no existan, B usa copias temporales en `src/jugador/utils/fechas.ts`, con un TODO para reemplazarlas.
+- **El filtro de errores:** traduce `ApplicationException` al formato de 5.1.
+
+### 13.3 Lo que A y C no deben hacer con las entidades de B
+
+Las entidades de B son `Jugador`, `EquipoJugador`, `Habilidad`, `Partido` y `Anotacion` (6.14).
+
+- Solo **leer** con las consultas de la sección 7: nada de `save`, `update` ni `delete`.
+- No agregar `@OneToMany` en ellas (6.14).
+- Los nombres de sus propiedades son contrato. `Partido` tiene `fase`, `equipoLocal`, `equipoVisitante`, `escenario`, `fechaHora`, `ronda`, `numeroLlave`, `estado`, `marcadorLocal` y `marcadorVisitante`.
+- `Partido.fechaHora` es un `Date` (ver 5.5).
+- Los `Resumen` de jugador y equipo ya los arma B con `JugadorMapper.aResumen()` y `EquipoResumenMapper.aResumen()` (en `src/jugador/mappers/`). Se pueden importar desde ahí en lugar de repetirlos.
+
+### 13.4 Migraciones
+
+El orden es el de 6.15. `BJugadoresHabilidades` se genera **después** de que `AInicial` esté en `main`, y `BPartidosAnotaciones` después de `CFasesHabilidadJugador`.
