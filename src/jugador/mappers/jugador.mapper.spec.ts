@@ -28,6 +28,50 @@ describe('JugadorMapper', () => {
     });
   });
 
+  // ACUERDOS 5.6: JugadorResumen = { id, tipoDocumento, numeroDocumento, nombreCompleto, activo }.
+  describe('aResumen', () => {
+    const jugador = {
+      id: 7,
+      tipoDocumento: TipoDocumento.CC,
+      numeroDocumento: '1053000000',
+      nombres: 'Juan Carlos',
+      apellidos: 'Pérez Gómez',
+      fechaNacimiento: '2002-05-10',
+      email: 'juan@correo.com',
+      telefono: '3001234567',
+      activo: false,
+      fechaCreacion: new Date('2026-11-20 10:00:00'),
+    } as Jugador;
+
+    it('devuelve exactamente las 5 claves del contrato (nada más)', () => {
+      expect(Object.keys(JugadorMapper.aResumen(jugador)).sort()).toEqual(
+        [
+          'activo',
+          'id',
+          'nombreCompleto',
+          'numeroDocumento',
+          'tipoDocumento',
+        ].sort(),
+      );
+    });
+
+    it('nombreCompleto es "nombres apellidos"', () => {
+      expect(JugadorMapper.aResumen(jugador).nombreCompleto).toBe(
+        'Juan Carlos Pérez Gómez',
+      );
+    });
+
+    it('copia los valores tal cual (incluido activo = false)', () => {
+      expect(JugadorMapper.aResumen(jugador)).toEqual({
+        id: 7,
+        tipoDocumento: 'CC',
+        numeroDocumento: '1053000000',
+        nombreCompleto: 'Juan Carlos Pérez Gómez',
+        activo: false,
+      });
+    });
+  });
+
   describe('aResponse', () => {
     const crearJugador = (parcial: Partial<Jugador> = {}): Jugador =>
       ({
@@ -40,7 +84,8 @@ describe('JugadorMapper', () => {
         email: 'juan@correo.com',
         telefono: '3001234567',
         activo: true,
-        fechaCreacion: '2026-11-20 10:00:00',
+        // TypeORM 1.1.2 entrega DATETIME como Date (new Date(texto), hora local).
+        fechaCreacion: new Date('2026-11-20 10:00:00'),
         ...parcial,
       }) as Jugador;
 
@@ -74,10 +119,19 @@ describe('JugadorMapper', () => {
       });
     });
 
-    it('convierte fechaCreacion "yyyy-MM-dd HH:mm:ss" a "yyyy-MM-ddTHH:mm:ss"', () => {
+    it('convierte fechaCreacion (Date) a "yyyy-MM-ddTHH:mm:ss"', () => {
       expect(JugadorMapper.aResponse(crearJugador()).fechaCreacion).toBe(
         '2026-11-20T10:00:00',
       );
+    });
+
+    it('convierte fechaCreacion "yyyy-MM-dd HH:mm:ss" (texto) a "yyyy-MM-ddTHH:mm:ss"', () => {
+      const r = JugadorMapper.aResponse(
+        crearJugador({
+          fechaCreacion: '2026-11-20 10:00:00' as unknown as Date,
+        }),
+      );
+      expect(r.fechaCreacion).toBe('2026-11-20T10:00:00');
     });
 
     it('mantiene email y telefono en null (no los cambia a undefined ni a "")', () => {

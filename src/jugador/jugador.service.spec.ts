@@ -31,14 +31,53 @@ jest.mock(
   }),
   { virtual: true },
 );
+// La entidad EquipoJugador (GD-05) importa Equipo de A en tiempo de ejecución.
+jest.mock(
+  '../equipo/entities/equipo.entity',
+  () => ({ Equipo: class Equipo {} }),
+  { virtual: true },
+);
+
+// JugadorService cuenta HabilidadJugador (de C) y Anotacion (de B). Anotacion → Partido carga en runtime
+// Escenario, Fase y RondaFinal (de A y C), que todavía no están en main.
+jest.mock(
+  '../habilidad-jugador/entities/habilidad-jugador.entity',
+  () => ({ HabilidadJugador: class HabilidadJugador {} }),
+  { virtual: true },
+);
+jest.mock(
+  '../escenario/entities/escenario.entity',
+  () => ({ Escenario: class Escenario {} }),
+  { virtual: true },
+);
+jest.mock('../fase/entities/fase.entity', () => ({ Fase: class Fase {} }), {
+  virtual: true,
+});
+jest.mock(
+  '../fase/entities/ronda-final.enum',
+  () => ({
+    RondaFinal: {
+      DIECISEISAVOS: 'DIECISEISAVOS',
+      OCTAVOS: 'OCTAVOS',
+      CUARTOS: 'CUARTOS',
+      SEMIFINAL: 'SEMIFINAL',
+      FINAL: 'FINAL',
+      TERCER_PUESTO: 'TERCER_PUESTO',
+    },
+  }),
+  { virtual: true },
+);
 
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Like, Not } from 'typeorm';
 import { ApplicationException } from '../common/errores/application.exception';
 import { ErrorCase } from '../common/errores/error-case.enum';
+import { HabilidadJugador } from '../habilidad-jugador/entities/habilidad-jugador.entity';
+import { Anotacion } from '../partido/entities/anotacion.entity';
 import { CrearJugadorDto } from './dto/crear-jugador.dto';
 import { ActualizarJugadorDto } from './dto/actualizar-jugador.dto';
+import { EquipoJugador } from './entities/equipo-jugador.entity';
 import { Jugador } from './entities/jugador.entity';
 import { TipoDocumento } from './entities/tipo-documento.enum';
 import { JugadorService } from './jugador.service';
@@ -68,7 +107,8 @@ const entidad = (extra: Partial<Jugador> = {}): Jugador =>
     email: null,
     telefono: null,
     activo: true,
-    fechaCreacion: '2026-01-01 10:00:00',
+    // TypeORM 1.1.2 entrega las columnas DATETIME como Date (hidrata con new Date(texto), hora local).
+    fechaCreacion: new Date('2026-01-01 10:00:00'),
     ...extra,
   }) as Jugador;
 
@@ -92,6 +132,15 @@ describe('JugadorService', () => {
     merge: jest.fn(),
     remove: jest.fn(),
   };
+  // Repositorio de contratos (GD-05): el service solo lo consulta para decidir si se puede eliminar.
+  const ejRepo = {
+    countBy: jest.fn(),
+    existsBy: jest.fn(),
+    find: jest.fn(),
+  };
+  // Habilidades asignadas (de C) y anotaciones (de B): el service solo las cuenta para decidir si elimina.
+  const hjRepo = { countBy: jest.fn() };
+  const anRepo = { countBy: jest.fn() };
 
   beforeEach(async () => {
     jest.resetAllMocks();
@@ -105,11 +154,20 @@ describe('JugadorService', () => {
       Object.assign(e, d),
     );
     repo.remove.mockResolvedValue(undefined);
+    // Por defecto el jugador no tiene contratos (cualquiera de las dos formas de consultar).
+    ejRepo.countBy.mockResolvedValue(0);
+    ejRepo.existsBy.mockResolvedValue(false);
+    ejRepo.find.mockResolvedValue([]);
+    hjRepo.countBy.mockResolvedValue(0);
+    anRepo.countBy.mockResolvedValue(0);
 
     const modulo = await Test.createTestingModule({
       providers: [
         JugadorService,
         { provide: getRepositoryToken(Jugador), useValue: repo },
+        { provide: getRepositoryToken(EquipoJugador), useValue: ejRepo },
+        { provide: getRepositoryToken(HabilidadJugador), useValue: hjRepo },
+        { provide: getRepositoryToken(Anotacion), useValue: anRepo },
       ],
     }).compile();
     service = modulo.get(JugadorService);
@@ -212,7 +270,7 @@ describe('JugadorService', () => {
       repo.create.mockImplementation((d: object) => ({
         id: 1,
         activo: true,
-        fechaCreacion: '2026-01-01 10:00:00',
+        fechaCreacion: new Date('2026-01-01 10:00:00'),
         ...d,
       }));
       const dto = crearDto();
@@ -304,6 +362,15 @@ describe('JugadorService', () => {
       repo.findOneBy.mockResolvedValue(entidad());
       const r = await service.obtener(7);
       expect(r).toMatchObject({ id: 7, nombreCompleto: 'Juan Pérez' });
+      expect(r.fechaCreacion).toBe('2026-01-01T10:00:00'); // fixture como Date
+    });
+
+    it('también formatea bien una fechaCreacion que llega como texto (dateStrings)', async () => {
+      repo.findOneBy.mockResolvedValue(
+        entidad({ fechaCreacion: '2026-01-01 10:00:00' as unknown as Date }),
+      );
+      const r = await service.obtener(7);
+      expect(r.fechaCreacion).toBe('2026-01-01T10:00:00');
     });
   });
 
@@ -422,8 +489,56 @@ describe('JugadorService', () => {
       expect(repo.remove).toHaveBeenCalledWith(j);
     });
 
-    it.todo(
-      'lanza HAS_ASSOCIATIONS si el jugador tiene EquipoJugador, HabilidadJugador o Anotacion (ACUERDOS 6.4; pendiente de entidades de A/C)',
-    );
+    it('lanza HAS_ASSOCIATIONS si el jugador tiene contratos, y el mensaje incluye el número', async () => {
+      repo.findOneBy.mockResolvedValue(entidad());
+      // Simula 3 contratos (activos o históricos: cualquier fila de equipo_jugador cuenta, 6.4).
+      ejRepo.countBy.mockResolvedValue(3);
+      ejRepo.existsBy.mockResolvedValue(true);
+      ejRepo.find.mockResolvedValue([{}, {}, {}]);
+
+      const promesa = service.eliminar(7);
+
+      await esperarErrorCase(promesa, ErrorCase.HAS_ASSOCIATIONS);
+      await expect(promesa).rejects.toThrow(/3/);
+      expect(repo.remove).not.toHaveBeenCalled();
+    });
+
+    it('cuenta los contratos del jugador por su id (activos e históricos, sin filtrar por activo)', async () => {
+      repo.findOneBy.mockResolvedValue(entidad());
+      await service.eliminar(7);
+      expect(ejRepo.countBy).toHaveBeenCalledWith({ jugador: { id: 7 } });
+    });
+
+    it('elimina (remove) si el jugador no tiene contratos', async () => {
+      const j = entidad();
+      repo.findOneBy.mockResolvedValue(j);
+      ejRepo.countBy.mockResolvedValue(0);
+      await expect(service.eliminar(7)).resolves.toBeUndefined();
+      expect(repo.remove).toHaveBeenCalledWith(j);
+    });
+
+    it('lanza HAS_ASSOCIATIONS si el jugador tiene habilidades asignadas, con el número, y no llama remove', async () => {
+      repo.findOneBy.mockResolvedValue(entidad());
+      hjRepo.countBy.mockResolvedValue(2);
+
+      const promesa = service.eliminar(7);
+
+      await esperarErrorCase(promesa, ErrorCase.HAS_ASSOCIATIONS);
+      await expect(promesa).rejects.toThrow(/2/);
+      expect(hjRepo.countBy).toHaveBeenCalledWith({ jugador: { id: 7 } });
+      expect(repo.remove).not.toHaveBeenCalled();
+    });
+
+    it('lanza HAS_ASSOCIATIONS si el jugador tiene anotaciones, con el número, y no llama remove', async () => {
+      repo.findOneBy.mockResolvedValue(entidad());
+      anRepo.countBy.mockResolvedValue(4);
+
+      const promesa = service.eliminar(7);
+
+      await esperarErrorCase(promesa, ErrorCase.HAS_ASSOCIATIONS);
+      await expect(promesa).rejects.toThrow(/4/);
+      expect(anRepo.countBy).toHaveBeenCalledWith({ jugador: { id: 7 } });
+      expect(repo.remove).not.toHaveBeenCalled();
+    });
   });
 });
