@@ -1,6 +1,10 @@
+// "import type": JugadorResumen solo se usa como TIPO (la línea desaparece al compilar).
+// TODO: ajustar la ruta cuando A suba common/dto
+import type { JugadorResumen } from '../../common/dto/jugador-resumen.dto';
 import { CrearJugadorDto } from '../dto/crear-jugador.dto';
 import { JugadorResponseDto } from '../dto/jugador-response.dto';
 import { Jugador } from '../entities/jugador.entity';
+import { aFechaHoraIso, hoyBogota } from '../utils/fechas';
 
 export class JugadorMapper {
   // DTO de entrada → datos de la entidad. Solo copia los 7 campos del JugadorRequest (9.7):
@@ -19,23 +23,37 @@ export class JugadorMapper {
   }
 
   static aResponse(jugador: Jugador): JugadorResponseDto {
-    const hoy = new Date().toLocaleDateString('en-CA', {
-      timeZone: 'America/Bogota',
-    }); // "yyyy-MM-dd"
     return {
       id: jugador.id,
       tipoDocumento: jugador.tipoDocumento,
       numeroDocumento: jugador.numeroDocumento,
       nombres: jugador.nombres,
       apellidos: jugador.apellidos,
-      nombreCompleto: `${jugador.nombres} ${jugador.apellidos}`,
+      nombreCompleto: JugadorMapper.nombreCompleto(jugador),
       fechaNacimiento: jugador.fechaNacimiento,
-      edad: JugadorMapper.calcularEdad(jugador.fechaNacimiento, hoy),
+      edad: JugadorMapper.calcularEdad(jugador.fechaNacimiento, hoyBogota()),
       email: jugador.email ?? null, // el contrato siempre trae la clave, aunque sea null
       telefono: jugador.telefono ?? null,
       activo: jugador.activo,
-      fechaCreacion: jugador.fechaCreacion.replace(' ', 'T'), // TODO: cambiar por aFechaHoraIso() de common/utils cuando A lo suba
+      fechaCreacion: aFechaHoraIso(jugador.fechaCreacion), // Date → "2026-11-20T10:00:00"
     };
+  }
+
+  // JugadorResumen (5.6): solo 5 campos, no el jugador completo. Lo usan otros mappers de B
+  // (EquipoJugadorMapper; más adelante el de anotaciones) para no armarlo a mano en cada uno.
+  static aResumen(jugador: Jugador): JugadorResumen {
+    return {
+      id: jugador.id,
+      tipoDocumento: jugador.tipoDocumento,
+      numeroDocumento: jugador.numeroDocumento,
+      nombreCompleto: JugadorMapper.nombreCompleto(jugador),
+      activo: jugador.activo,
+    };
+  }
+
+  // Única fuente de "nombres apellidos": la usan aResponse, aResumen y los mensajes de error de los services.
+  static nombreCompleto(jugador: Jugador): string {
+    return `${jugador.nombres} ${jugador.apellidos}`;
   }
 
   static calcularEdad(fechaNacimiento: string, hoy: string): number {

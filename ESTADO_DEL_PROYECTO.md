@@ -87,9 +87,9 @@ Columnas: **Ent** = entidad/migración · **API** = endpoints backend · **Front
 | GD-01 | Deportes | A | ⬜ | ⬜ | — | ⬜ | ⬜ | |
 | GD-02 | Equipos | A | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | |
 | GD-03 | Equipo ↔ Deporte | A | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | |
-| GD-04 | Jugadores | B | 🟡 entidad lista, falta migración | 🟡 completo y probado (51 pruebas); espera `common/` de A | ⬜ | ⬜ | ⬜ | `feature/B-jugadores` (local) |
-| GD-05 | Equipo ↔ Jugador | B | ⛔ espera `Equipo` | ⬜ | ⬜ | ⬜ | ⬜ | |
-| GD-06 | Habilidades | B | ⬜ | ⬜ | — | ⬜ | ⬜ | |
+| GD-04 | Jugadores | B | 🟡 entidad lista, falta migración | ✅ en `main` + correcciones y chequeos de `eliminar` en `feature/B-habilidades` · ⚠️ no compila hasta que A suba `common/` | ⬜ | ⬜ | ⬜ | PR #1 ✅ |
+| GD-05 | Equipo ↔ Jugador | B | 🟡 entidad lista (importa `Equipo` de A), falta migración | ✅ 4 endpoints + pruebas + revisión · no compila sin `common/` y `Equipo` | ⬜ | ⬜ | ⬜ | `feature/B-habilidades` (sin PR) |
+| GD-06 | Habilidades | B | 🟡 entidad lista, falta migración | ✅ 5 endpoints + pruebas + revisión (incluye 409 por `HabilidadJugador`) · no compila sin `common/` y `HabilidadJugador` (C) | — | ⬜ | ⬜ | `feature/B-habilidades` (sin PR) |
 | GD-07 | Habilidad ↔ Jugador | C | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | |
 | GD-08 | Perfil deportivo | C | — | ⬜ | ⬜ | ⬜ | ⬜ | |
 | GC-01 | Torneos | A | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | |
@@ -97,8 +97,8 @@ Columnas: **Ent** = entidad/migración · **API** = endpoints backend · **Front
 | GC-03 | Fases | C | ⬜ | ⬜ | — | ⬜ | ⬜ | |
 | GC-04 | Grupos | C | ⬜ | ⬜ | — | ⬜ | ⬜ | |
 | GC-05 | Fase final | C | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | |
-| GC-06 | Partidos | B | ⛔ espera `Fase`, `Escenario` | ⬜ | ⬜ | ⬜ | ⬜ | |
-| GC-07 | Resultados y anotaciones | B | ⛔ espera GC-06 | ⬜ | ⬜ | ⬜ | ⬜ | |
+| GC-06 | Partidos | B | 🟡 `Partido` y `Anotacion` escritas contra el contrato, falta migración `BPartidosAnotaciones` | ✅ 7 endpoints + reglas + correo + pruebas + revisión · no compila sin A (`common/`, `Equipo`, `Torneo`, `Inscripcion`, `Escenario`) y C (`Fase`, `GrupoEquipo`, `RondaFinal`, `TipoFase`) | ⬜ | ⬜ | ⬜ | `feature/B-habilidades` (sin PR) |
+| GC-07 | Resultados y anotaciones | B | 🟡 `Anotacion` lista, falta migración | ✅ 5 endpoints + correos de anotación y resumen + pruebas + revisión · mismas dependencias que GC-06 | ⬜ | ⬜ | ⬜ | `feature/B-habilidades` (sin PR) |
 | GC-08 | Desarrollo del torneo | C | — | ⬜ | ⬜ | ⬜ | ⬜ | |
 
 ---
@@ -109,7 +109,8 @@ Qué necesita cada uno de otro. El dueño marca ✅ cuando lo sube a `main`.
 
 | Quién lo necesita | Qué | De | Para | Estado |
 |---|---|---|---|---|
-| Todos | `ApplicationException`, `ErrorCase`, `HttpExceptionFilter` | A | Que compile cualquier service | ⬜ |
+| Todos | `ApplicationException`, `ErrorCase`, `HttpExceptionFilter` (archivos `common/errores/application.exception.ts` y `error-case.enum.ts`) | A | Que compile cualquier service · **hoy `main` no compila sin esto** | ⬜ |
+| Todos | `EstadoDto` en `common/dto/estado.dto.ts` | A | `PATCH .../estado` · **`main` no compila sin esto** | ⬜ |
 | Todos | `EstadoDto` y `*Resumen` en `common/dto` | A | DTOs de respuesta y `PATCH .../estado` | ⬜ |
 | Todos | `aFechaHoraIso()`, `hoyBogota()` en `common/utils` | A | Mappers y reglas con "hoy" | ⬜ |
 | Todos | `dateStrings: true` + `timezone` en `app.module.ts` | A | Fechas como texto (ACUERDOS 5.5) | ⬜ |
@@ -120,8 +121,10 @@ Qué necesita cada uno de otro. El dueño marca ✅ cuando lo sube a `main`.
 | B, C | Base del front (`gestionClient`, rutas, componentes vacíos) | A | Pantallas | ⬜ |
 | B | `Fase`/`Grupo`/`FaseFinal`, `GrupoEquipo` + migración C | C | `Partido` (GC-06) | ⬜ |
 | B | Entidad `HabilidadJugador` | C | Eliminar jugador / habilidad | ⬜ |
-| C | Entidades `Jugador`, `Habilidad` | B | GD-07, GD-08 | 🟡 `Jugador` lista en rama de B |
-| C | `Partido`, `Anotacion` | B | GC-05, GC-08 | ⬜ |
+| B | Confirmar archivos: A → `common/notificacion/correo.service.ts` y `destinatarios.service.ts`, `common/errores/*`, `common/dto/*-resumen.dto.ts` · C → `fase/entities/ronda-final.enum.ts` y `tipo-fase.enum.ts` (B los importa con esos nombres) | A, C | GC-06, GC-07 | ⬜ |
+| Todos | ⚠️ En TypeORM 1.1.2 las columnas **DATETIME llegan como `Date`**, aunque `dateStrings` esté activo (`MysqlDriver.js:533-535`). Contradice ACUERDOS 5.5: `aFechaHoraIso()` debe aceptar `Date \| string` | A | Mappers de todos (si no, da 500) | ⬜ |
+| C | Entidades `Jugador`, `Habilidad` | B | GD-07, GD-08 | 🟡 `Jugador` en `main` · `Habilidad` en `feature/B-habilidades` |
+| C | `Partido`, `Anotacion` | B | GC-05, GC-08 | 🟡 escritas en `feature/B-habilidades` (rutas de 6.14) |
 | Todos | Endpoint `permissions-validation` en `ms_security` | C | Probar con seguridad activada | ⬜ |
 
 **Acuerdo pendiente de confirmar:** B crea sus propios `jugador.module.ts`, `habilidad.module.ts` y `partido.module.ts`; A solo los importa en `app.module.ts` (para no chocar en el merge).
@@ -144,6 +147,9 @@ Lo más reciente arriba. Una línea por avance: fecha · quién · qué (con PR 
 
 | Fecha | Quién | Avance |
 |---|---|---|
+| 21/11 | Adrián | `feature/B-habilidades` (sin PR): **backend de GC-06 y GC-07 completo** (partidos, resultado, anotaciones, 3 correos), y chequeos de `eliminar` en jugador y habilidad. **753 pruebas OK.** Compila cuando A y C suban sus entidades y `common/` (ver bloqueos). ⚠️ El manifiesto de `docs/husNico` contradice ACUERDOS (carpetas `modules/`, `NotFoundException`, `{statusCode, data}`, `Equipo.estado`): seguir ACUERDOS 4.1, 5.1, 6.2 y 6.14 |
+| 20/11 noche | Adrián | En `feature/B-habilidades` (sin PR):<br>• GD-06 habilidades completa;<br>• GD-05 contratos completa;<br>• GC-06: enum de transiciones, entidad y DTOs.<br>Son 396 pruebas OK. Solo compila con `common/` y `Equipo` de A, y `Fase`, `RondaFinal` y `Escenario` de C.<br>⚠️ Las columnas DATETIME llegan como `Date` (ver bloqueos). |
+| 20/11 noche | Adrián | PR #1 (GD-04 jugadores) y PR #2 (este tablero) mergeados a `main`. ⚠️ **`main` no compila** hasta que A suba `common/errores/application.exception.ts`, `common/errores/error-case.enum.ts` y `common/dto/estado.dto.ts` (son los imports que usa `src/jugador`). Mientras tanto, para que compile local: esperar a `common/` o ignorar `src/jugador` |
 | 20/11 noche | Adrián | GD-04 backend completo en `feature/B-jugadores` (sin PR): entidad, DTOs, mapper, service, controller, module, 51 pruebas OK. No compila en `main` hasta que A suba `common/errores` y `common/dto`. Pruebas con `npm test -- src/<modulo>` (no `npx jest`: Nest 12 es ESM) |
 | 20/11 | Adrián | Se crea este archivo. En `main` solo está el esqueleto (`08ac59c`, `84db547`); sin ramas ni PRs de A o C. `ms_security` sin endpoint de validación, `ms-notifications` sin `/api/notifications/send`, front sin cambios de la entrega 2 |
 | 19/11 | Adrián | Repo creado a partir de `ms-cinema` y subido a GitHub (`08ac59c`), link en `ACUERDOS.md` sección 12 (`84db547`) |

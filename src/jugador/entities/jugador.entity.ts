@@ -37,6 +37,13 @@ export class Jugador {
   @Column({ type: 'boolean', default: true })
   activo!: boolean;
 
-  @CreateDateColumn({ name: 'fecha_creacion', type: 'datetime' })
-  fechaCreacion!: string;
+  // DATETIME sin microsegundos (precision 0; TypeORM usa 6 por defecto). Llega como Date, no como texto:
+  // el mapper lo pasa a "yyyy-MM-ddTHH:mm:ss" con aFechaHoraIso.
+  @CreateDateColumn({
+    name: 'fecha_creacion',
+    type: 'datetime',
+    precision: 0,
+    default: () => 'CURRENT_TIMESTAMP',
+  })
+  fechaCreacion!: Date;
 }
