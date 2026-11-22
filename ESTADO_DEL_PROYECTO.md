@@ -3,7 +3,7 @@
 > Tablero de avance **del equipo**. El contrato (rutas, tablas, reglas, dueños) está en [`ACUERDOS.md`](./ACUERDOS.md); aquí solo se marca **qué está hecho y qué bloquea a quién**.
 > **Entrega y sustentación individual: lunes 24/11/2026.** · A = Nicolás · B = Adrián · C = Andrei
 
-**Última actualización:** 20/11/2026 · por Adrián
+**Última actualización:** 22/11/2026 · por Andrei
 
 **Leyenda:** ✅ hecho y en `main` · 🔀 en PR · 🟡 en curso (rama o local) · ⬜ pendiente · ⛔ bloqueado (ver dependencia)
 
@@ -90,7 +90,7 @@ Columnas: **Ent** = entidad/migración · **API** = endpoints backend · **Front
 | GD-04 | Jugadores | B | 🟡 entidad lista, falta migración | ✅ en `main` + correcciones y chequeos de `eliminar` en `feature/B-habilidades` · ⚠️ no compila hasta que A suba `common/` | ⬜ | ⬜ | ⬜ | PR #1 ✅ |
 | GD-05 | Equipo ↔ Jugador | B | 🟡 entidad lista (importa `Equipo` de A), falta migración | ✅ 4 endpoints + pruebas + revisión · no compila sin `common/` y `Equipo` | ⬜ | ⬜ | ⬜ | `feature/B-habilidades` (sin PR) |
 | GD-06 | Habilidades | B | 🟡 entidad lista, falta migración | ✅ 5 endpoints + pruebas + revisión (incluye 409 por `HabilidadJugador`) · no compila sin `common/` y `HabilidadJugador` (C) | — | ⬜ | ⬜ | `feature/B-habilidades` (sin PR) |
-| GD-07 | Habilidad ↔ Jugador | C | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | |
+| GD-07 | Habilidad ↔ Jugador | C | 🟡 entidad lista, falta migración `CFasesHabilidadJugador` | ✅ 4 endpoints + pruebas Jest (patrón B) · no compila completo hasta que A suba `common/` | ⬜ *(deuda técnica)* | ⬜ *(pendiente `ms_security`)* | ✅ (`postman/ms-gestion-deportiva-C.postman_collection.json`) | `feature/C-habilidad-jugador` (sin PR) |
 | GD-08 | Perfil deportivo | C | — | ⬜ | ⬜ | ⬜ | ⬜ | |
 | GC-01 | Torneos | A | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | |
 | GC-02 | Inscripciones | A | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | |
@@ -120,7 +120,8 @@ Qué necesita cada uno de otro. El dueño marca ✅ cuando lo sube a `main`.
 | B | `CorreoService` + `DestinatariosService` + `/api/notifications/send` | A | Correos de GC-06 y GC-07 | ⬜ |
 | B, C | Base del front (`gestionClient`, rutas, componentes vacíos) | A | Pantallas | ⬜ |
 | B | `Fase`/`Grupo`/`FaseFinal`, `GrupoEquipo` + migración C | C | `Partido` (GC-06) | ⬜ |
-| B | Entidad `HabilidadJugador` | C | Eliminar jugador / habilidad | ⬜ |
+| B | Entidad `HabilidadJugador` | C | Eliminar jugador / habilidad | 🟡 en `feature/C-habilidad-jugador` |
+| C | Confirmar archivo `common/dto/habilidad-resumen.dto.ts` (exporta `HabilidadResumen`) | A | GD-07 y GD-08 | ⬜ |
 | B | Confirmar archivos: A → `common/notificacion/correo.service.ts` y `destinatarios.service.ts`, `common/errores/*`, `common/dto/*-resumen.dto.ts` · C → `fase/entities/ronda-final.enum.ts` y `tipo-fase.enum.ts` (B los importa con esos nombres) | A, C | GC-06, GC-07 | ⬜ |
 | Todos | ⚠️ En TypeORM 1.1.2 las columnas **DATETIME llegan como `Date`**, aunque `dateStrings` esté activo (`MysqlDriver.js:533-535`). Contradice ACUERDOS 5.5: `aFechaHoraIso()` debe aceptar `Date \| string` | A | Mappers de todos (si no, da 500) | ⬜ |
 | C | Entidades `Jugador`, `Habilidad` | B | GD-07, GD-08 | 🟡 `Jugador` en `main` · `Habilidad` en `feature/B-habilidades` |
@@ -128,6 +129,11 @@ Qué necesita cada uno de otro. El dueño marca ✅ cuando lo sube a `main`.
 | Todos | Endpoint `permissions-validation` en `ms_security` | C | Probar con seguridad activada | ⬜ |
 
 **Acuerdo pendiente de confirmar:** B crea sus propios `jugador.module.ts`, `habilidad.module.ts` y `partido.module.ts`; A solo los importa en `app.module.ts` (para no chocar en el merge).
+
+**Deuda técnica registrada (C · Andrei):**
+- Se avanza primero con **backend + pruebas unitarias Jest + colección Postman** para todas las HU de Persona C (GD-07, GD-08, GC-03, GC-04, GC-05, GC-08).
+- Las pantallas de **frontend de C** (GD-07, GD-08, GC-05, GC-08) quedan como deuda técnica mientras A sube la base del front (`gestionClient.js`, rutas y placeholders) y se completan las HU en backend.
+- Los roles, permisos y el endpoint `POST /api/internal/security/permissions-validation` en `ms_security` se abordarán en una sesión posterior tras avanzar las HU del backend.
 
 ---
 
@@ -147,6 +153,7 @@ Lo más reciente arriba. Una línea por avance: fecha · quién · qué (con PR 
 
 | Fecha | Quién | Avance |
 |---|---|---|
+| 22/11 | Andrei | `feature/C-habilidad-jugador` (sin PR): **backend de HU-GD-07 completo** (`HabilidadJugador`, DTO, mapper, service, controller, module, pruebas unitarias Jest y colección Postman v2.1). Se registra deuda técnica de frontend de C y `ms_security`, y se pasa configuración local de BD a `.env`. |
 | 21/11 | Adrián | `feature/B-habilidades` (sin PR): **backend de GC-06 y GC-07 completo** (partidos, resultado, anotaciones, 3 correos), y chequeos de `eliminar` en jugador y habilidad. **753 pruebas OK.** Compila cuando A y C suban sus entidades y `common/` (ver bloqueos). ⚠️ El manifiesto de `docs/husNico` contradice ACUERDOS (carpetas `modules/`, `NotFoundException`, `{statusCode, data}`, `Equipo.estado`): seguir ACUERDOS 4.1, 5.1, 6.2 y 6.14 |
 | 20/11 noche | Adrián | En `feature/B-habilidades` (sin PR):<br>• GD-06 habilidades completa;<br>• GD-05 contratos completa;<br>• GC-06: enum de transiciones, entidad y DTOs.<br>Son 396 pruebas OK. Solo compila con `common/` y `Equipo` de A, y `Fase`, `RondaFinal` y `Escenario` de C.<br>⚠️ Las columnas DATETIME llegan como `Date` (ver bloqueos). |
 | 20/11 noche | Adrián | PR #1 (GD-04 jugadores) y PR #2 (este tablero) mergeados a `main`. ⚠️ **`main` no compila** hasta que A suba `common/errores/application.exception.ts`, `common/errores/error-case.enum.ts` y `common/dto/estado.dto.ts` (son los imports que usa `src/jugador`). Mientras tanto, para que compile local: esperar a `common/` o ignorar `src/jugador` |

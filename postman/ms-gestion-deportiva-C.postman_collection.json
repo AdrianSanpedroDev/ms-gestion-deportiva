@@ -1,0 +1,437 @@
+{
+  "info": {
+    "_postman_id": "c7a1d2e0-0707-4c00-9c00-000000000001",
+    "name": "ms-gestion-deportiva (Persona C)",
+    "description": "Colección de pruebas de integración HTTP (Postman v2.1) para las Historias de Usuario asignadas a Persona C (Andrei). Contrato: ACUERDOS.md sección 9.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "HU-GD-07 - Asignar habilidades a jugadores",
+      "description": "ACUERDOS 9.12: POST /api/jugadores/{jugadorId}/habilidades, GET /api/jugadores/{jugadorId}/habilidades, GET /api/habilidades/{habilidadId}/jugadores, DELETE /api/jugadores/{jugadorId}/habilidades/{habilidadId}",
+      "item": [
+        {
+          "name": "1. Asignar habilidad a jugador (Happy Path - 201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 201 Created', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Respuesta cumple contrato HabilidadResumen', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.all.keys('id', 'nombre', 'categoria');",
+                  "  pm.expect(body.id).to.eql(Number(pm.environment.get('habilidadId')));",
+                  "  pm.environment.set('habilidadAsignadaId', String(body.id));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"habilidadId\": {{habilidadId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}/habilidades",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jugadores", "{{jugadorId}}", "habilidades"]
+            }
+          }
+        },
+        {
+          "name": "2. Asignar habilidad duplicada al mismo jugador (409 ALREADY_EXISTS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 409 Conflict', function () {",
+                  "  pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test('Devuelve errorCase ALREADY_EXISTS', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('ALREADY_EXISTS');",
+                  "  pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"habilidadId\": {{habilidadId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}/habilidades",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jugadores", "{{jugadorId}}", "habilidades"]
+            }
+          }
+        },
+        {
+          "name": "3. Asignar habilidad con body inválido (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Reporta error de validación en habilidadId', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('habilidadId');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}/habilidades",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jugadores", "{{jugadorId}}", "habilidades"]
+            }
+          }
+        },
+        {
+          "name": "4. Asignar habilidad a jugador inactivo (400 INVALID_OPERATION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Devuelve errorCase INVALID_OPERATION', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('INVALID_OPERATION');",
+                  "  pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"habilidadId\": {{habilidadId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorInactivoId}}/habilidades",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jugadores", "{{jugadorInactivoId}}", "habilidades"]
+            }
+          }
+        },
+        {
+          "name": "5. Asignar habilidad inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Devuelve errorCase NOT_FOUND', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"habilidadId\": 999999\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}/habilidades",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jugadores", "{{jugadorId}}", "habilidades"]
+            }
+          }
+        },
+        {
+          "name": "6. Listar habilidades de un jugador (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Devuelve arreglo con la habilidad asignada', function () {",
+                  "  const list = pm.response.json();",
+                  "  pm.expect(list).to.be.an('array');",
+                  "  const esperada = Number(pm.environment.get('habilidadAsignadaId') || pm.environment.get('habilidadId'));",
+                  "  const encontrada = list.find((h) => h.id === esperada);",
+                  "  pm.expect(encontrada).to.not.be.undefined;",
+                  "  pm.expect(encontrada).to.have.all.keys('id', 'nombre', 'categoria');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}/habilidades",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jugadores", "{{jugadorId}}", "habilidades"]
+            }
+          }
+        },
+        {
+          "name": "7. Listar habilidades de jugador inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Devuelve errorCase NOT_FOUND', function () {",
+                  "  pm.expect(pm.response.json().errorCase).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/999999/habilidades",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jugadores", "999999", "habilidades"]
+            }
+          }
+        },
+        {
+          "name": "8. Listar jugadores que poseen una habilidad (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Devuelve arreglo de JugadorResumen con el jugador asignado', function () {",
+                  "  const list = pm.response.json();",
+                  "  pm.expect(list).to.be.an('array');",
+                  "  const esperado = Number(pm.environment.get('jugadorId'));",
+                  "  const encontrado = list.find((j) => j.id === esperado);",
+                  "  pm.expect(encontrado).to.not.be.undefined;",
+                  "  pm.expect(encontrado).to.have.all.keys('id', 'tipoDocumento', 'numeroDocumento', 'nombreCompleto', 'activo');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/habilidades/{{habilidadId}}/jugadores",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "habilidades", "{{habilidadId}}", "jugadores"]
+            }
+          }
+        },
+        {
+          "name": "9. Listar jugadores de habilidad inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Devuelve errorCase NOT_FOUND', function () {",
+                  "  pm.expect(pm.response.json().errorCase).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/habilidades/999999/jugadores",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "habilidades", "999999", "jugadores"]
+            }
+          }
+        },
+        {
+          "name": "10. Retirar habilidad de jugador (204 No Content)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 204 No Content', function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});",
+                  "pm.test('Respuesta sin cuerpo', function () {",
+                  "  pm.expect(pm.response.text()).to.eql('');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}/habilidades/{{habilidadId}}",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "jugadores",
+                "{{jugadorId}}",
+                "habilidades",
+                "{{habilidadId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "11. Retirar habilidad ya retirada / inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Devuelve errorCase NOT_FOUND', function () {",
+                  "  pm.expect(pm.response.json().errorCase).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}/habilidades/{{habilidadId}}",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "jugadores",
+                "{{jugadorId}}",
+                "habilidades",
+                "{{habilidadId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "12. Verificar que la habilidad sigue existiendo tras retirarla (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('La habilidad sigue existiendo en el catálogo (200 OK)', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.id).to.eql(Number(pm.environment.get('habilidadId')));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/habilidades/{{habilidadId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "habilidades", "{{habilidadId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
