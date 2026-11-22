@@ -432,6 +432,196 @@
           }
         }
       ]
+    },
+    {
+      "name": "HU-GD-08 - Consultar perfil deportivo del jugador",
+      "description": "ACUERDOS 9.13: GET /api/jugadores/{jugadorId}/perfil (y búsqueda previa de jugador en GET /api/jugadores?busqueda= de ACUERDOS 9.7)",
+      "item": [
+        {
+          "name": "1. Buscar jugador registrado por texto (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Devuelve arreglo de jugadores registrados', function () {",
+                  "  const list = pm.response.json();",
+                  "  pm.expect(list).to.be.an('array');",
+                  "  if (list.length > 0) {",
+                  "    pm.expect(list[0]).to.have.property('id');",
+                  "    pm.expect(list[0]).to.have.property('nombreCompleto');",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores?busqueda={{busquedaJugador}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jugadores"],
+              "query": [
+                {
+                  "key": "busqueda",
+                  "value": "{{busquedaJugador}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "2. Consultar perfil deportivo completo de jugador (Happy Path - 200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Respuesta cumple contrato PerfilJugadorResponse', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.all.keys('jugador', 'equiposActuales', 'historialEquipos', 'habilidades', 'tieneEquipos', 'tieneHabilidades', 'mensajes');",
+                  "  pm.expect(body.jugador).to.have.all.keys('id', 'tipoDocumento', 'numeroDocumento', 'nombreCompleto', 'fechaNacimiento', 'edad', 'email', 'telefono', 'activo');",
+                  "  pm.expect(body.jugador.id).to.eql(Number(pm.environment.get('jugadorId')));",
+                  "  pm.expect(body.equiposActuales).to.be.an('array');",
+                  "  pm.expect(body.historialEquipos).to.be.an('array');",
+                  "  pm.expect(body.habilidades).to.be.an('array');",
+                  "  pm.expect(body.tieneEquipos).to.be.a('boolean');",
+                  "  pm.expect(body.tieneHabilidades).to.be.a('boolean');",
+                  "  pm.expect(body.mensajes).to.be.an('array');",
+                  "});",
+                  "pm.test('Consistencia de banderas, estructuras internas y mensajes', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.tieneEquipos).to.eql(body.equiposActuales.length > 0);",
+                  "  pm.expect(body.tieneHabilidades).to.eql(body.habilidades.length > 0);",
+                  "  if (body.equiposActuales.length > 0) {",
+                  "    pm.expect(body.equiposActuales[0]).to.have.all.keys('equipo', 'fechaInicio', 'fechaFin');",
+                  "    pm.expect(body.equiposActuales[0].equipo).to.have.all.keys('id', 'nombre', 'activo');",
+                  "  }",
+                  "  if (body.historialEquipos.length > 0) {",
+                  "    pm.expect(body.historialEquipos[0]).to.have.all.keys('equipo', 'fechaInicio', 'fechaFin', 'fechaRetiro');",
+                  "    pm.expect(body.historialEquipos[0].equipo).to.have.all.keys('id', 'nombre', 'activo');",
+                  "  }",
+                  "  if (body.habilidades.length > 0) {",
+                  "    pm.expect(body.habilidades[0]).to.have.all.keys('id', 'nombre', 'categoria');",
+                  "  }",
+                  "  if (body.tieneEquipos && body.tieneHabilidades) {",
+                  "    pm.expect(body.mensajes).to.eql([]);",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}/perfil",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jugadores", "{{jugadorId}}", "perfil"]
+            }
+          }
+        },
+        {
+          "name": "3. Consultar perfil de jugador sin equipos activos ni habilidades (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Indica ausencia de equipos activos y habilidades en mensajes', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.equiposActuales).to.eql([]);",
+                  "  pm.expect(body.habilidades).to.eql([]);",
+                  "  pm.expect(body.tieneEquipos).to.eql(false);",
+                  "  pm.expect(body.tieneHabilidades).to.eql(false);",
+                  "  pm.expect(body.mensajes).to.include('El jugador no tiene equipos asociados');",
+                  "  pm.expect(body.mensajes).to.include('El jugador no tiene habilidades registradas');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorSinDatosId}}/perfil",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jugadores", "{{jugadorSinDatosId}}", "perfil"]
+            }
+          }
+        },
+        {
+          "name": "4. Consultar perfil con jugadorId inválido (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/abc/perfil",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jugadores", "abc", "perfil"]
+            }
+          }
+        },
+        {
+          "name": "5. Consultar perfil de jugador inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Devuelve errorCase NOT_FOUND', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('NOT_FOUND');",
+                  "  pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/999999/perfil",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jugadores", "999999", "perfil"]
+            }
+          }
+        }
+      ]
     }
   ]
 }
