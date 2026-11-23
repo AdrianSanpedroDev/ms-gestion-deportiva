@@ -2254,6 +2254,187 @@
           }
         }
       ]
+    },
+    {
+      "name": "HU-GC-08 - Consultar desarrollo de un torneo",
+      "description": "ACUERDOS 9.17: GET /api/torneos/{torneoId}/desarrollo y consulta complementaria de anotaciones GET /api/partidos/{partidoId}/anotaciones.",
+      "item": [
+        {
+          "name": "1. Consultar desarrollo completo de un torneo (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Respuesta cumple contrato DesarrolloTorneoResponse', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.all.keys('torneo', 'resumen', 'fases');",
+                  "  pm.expect(body.torneo).to.have.all.keys('id', 'nombre', 'deporte', 'fechaInicio', 'fechaFin', 'estado', 'cantidadInscritos');",
+                  "  pm.expect(body.torneo.id).to.eql(Number(pm.environment.get('torneoId')));",
+                  "  pm.expect(body.torneo.deporte).to.have.all.keys('id', 'nombre', 'activo');",
+                  "  pm.expect(body.resumen).to.have.all.keys('totalPartidos', 'conResultado', 'pendientes');",
+                  "  pm.expect(body.resumen.conResultado + body.resumen.pendientes).to.be.at.most(body.resumen.totalPartidos);",
+                  "  pm.expect(body.fases).to.be.an('array');",
+                  "});",
+                  "pm.test('Fases respetan estructura según tipo (GRUPO vs FINAL) y orden', function () {",
+                  "  const { fases } = pm.response.json();",
+                  "  for (let i = 0; i < fases.length; i++) {",
+                  "    const fase = fases[i];",
+                  "    pm.expect(fase).to.have.all.keys('id', 'nombre', 'tipo', 'orden', 'equipos', 'tablaPosiciones', 'llaves', 'partidos');",
+                  "    if (i > 0) {",
+                  "      pm.expect(fase.orden).to.be.at.least(fases[i - 1].orden);",
+                  "    }",
+                  "    if (fase.tipo === 'GRUPO') {",
+                  "      pm.expect(fase.equipos).to.be.an('array');",
+                  "      pm.expect(fase.tablaPosiciones).to.be.an('array');",
+                  "      pm.expect(fase.llaves).to.be.null;",
+                  "    } else if (fase.tipo === 'FINAL') {",
+                  "      pm.expect(fase.equipos).to.be.null;",
+                  "      pm.expect(fase.tablaPosiciones).to.be.null;",
+                  "      pm.expect(fase.llaves).to.be.an('array');",
+                  "    }",
+                  "    pm.expect(fase.partidos).to.be.an('array');",
+                  "    if (fase.partidos.length > 0 && !pm.environment.get('partidoDesarrolloId')) {",
+                  "      pm.environment.set('partidoDesarrolloId', String(fase.partidos[0].id));",
+                  "    }",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/desarrollo",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoId}}", "desarrollo"]
+            }
+          }
+        },
+        {
+          "name": "2. Consultar desarrollo de torneo sin fases ni partidos (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Devuelve fases vacías y resumen en ceros', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.fases).to.eql([]);",
+                  "  pm.expect(body.resumen).to.eql({ totalPartidos: 0, conResultado: 0, pendientes: 0 });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoSinFasesId}}/desarrollo",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoSinFasesId}}", "desarrollo"]
+            }
+          }
+        },
+        {
+          "name": "3. Consultar anotaciones de un partido del desarrollo (ACUERDOS 9.17 - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Devuelve arreglo de anotaciones del partido', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.be.an('array');",
+                  "  if (body.length > 0) {",
+                  "    pm.expect(body[0]).to.have.all.keys('id', 'partidoId', 'jugador', 'equipo', 'minuto', 'valor', 'descripcion', 'fechaRegistro');",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/partidos/{{partidoDesarrolloId}}/anotaciones",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "partidos", "{{partidoDesarrolloId}}", "anotaciones"]
+            }
+          }
+        },
+        {
+          "name": "4. Consultar desarrollo con torneoId inválido no numérico (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/abc/desarrollo",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "abc", "desarrollo"]
+            }
+          }
+        },
+        {
+          "name": "5. Consultar desarrollo de torneo inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('errorCase es NOT_FOUND', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('NOT_FOUND');",
+                  "  pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/999999/desarrollo",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "999999", "desarrollo"]
+            }
+          }
+        }
+      ]
     }
   ]
 }
