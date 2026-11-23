@@ -9,12 +9,14 @@ import { Torneo } from '../torneo/entities/torneo.entity';
 import { Fase, FaseFinal, Grupo } from './entities/fase.entity';
 import { GrupoEquipo } from './entities/grupo-equipo.entity';
 import { FaseController } from './fase.controller';
+import { FaseFinalController } from './fase-final.controller';
+import { FaseFinalService } from './fase-final.service';
 import { FaseService } from './fase.service';
 import { GrupoController } from './grupo.controller';
 import { GrupoService } from './grupo.service';
 import { FaseRepository } from './repositories/fase.repository';
 
-// Módulo de C: fases (HU-GC-03), grupos (HU-GC-04) y luego fase final (HU-GC-05).
+// Módulo de C: fases (HU-GC-03), grupos (HU-GC-04) y fase final (HU-GC-05).
 // A lo importa en app.module.ts (archivo de A).
 @Module({
   imports: [
@@ -29,7 +31,7 @@ import { FaseRepository } from './repositories/fase.repository';
       Partido,
     ]),
   ],
-  controllers: [FaseController, GrupoController],
-  providers: [FaseService, GrupoService, FaseRepository],
+  controllers: [FaseController, GrupoController, FaseFinalController],
+  providers: [FaseService, GrupoService, FaseFinalService, FaseRepository],
 })
 export class FaseModule {}

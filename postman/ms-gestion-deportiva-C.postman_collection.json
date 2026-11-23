@@ -1695,6 +1695,565 @@
           }
         }
       ]
+    },
+    {
+      "name": "HU-GC-05 - Gestionar fases finales",
+      "description": "ACUERDOS 9.16: POST/GET /api/torneos/{torneoId}/fase-final, PUT/DELETE /api/fases-finales/{id}, GET /api/fases-finales/{id}/llaves",
+      "item": [
+        {
+          "name": "1. Crear fase final (Happy Path - 201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 201 Created', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Respuesta cumple contrato FaseResponseDto (FINAL)', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.all.keys('id', 'torneo', 'nombre', 'tipo', 'orden', 'cantidadEquipos', 'tercerPuesto', 'cantidadPartidos');",
+                  "  pm.expect(body.tipo).to.eql('FINAL');",
+                  "  pm.expect(body.cantidadEquipos).to.eql(4);",
+                  "  pm.expect(body.tercerPuesto).to.eql(true);",
+                  "  pm.expect(body.cantidadPartidos).to.eql(0);",
+                  "  pm.environment.set('faseFinalId', String(body.id));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Fase final\",\n  \"orden\": 2,\n  \"cantidadEquipos\": 4,\n  \"tercerPuesto\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/fase-final",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoId}}", "fase-final"]
+            }
+          }
+        },
+        {
+          "name": "2. Crear fase final con datos inválidos (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Retorna errores de validación por campo', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('cantidadEquipos');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Fase inválida\",\n  \"orden\": 2,\n  \"cantidadEquipos\": 6\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/fase-final",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoId}}", "fase-final"]
+            }
+          }
+        },
+        {
+          "name": "3. Crear fase final de 2 equipos con tercerPuesto=true (400 INVALID_OPERATION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('errorCase es INVALID_OPERATION', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('INVALID_OPERATION');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Gran final\",\n  \"orden\": 2,\n  \"cantidadEquipos\": 2,\n  \"tercerPuesto\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoSinFaseFinalId}}/fase-final",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoSinFaseFinalId}}", "fase-final"]
+            }
+          }
+        },
+        {
+          "name": "4. Crear fase final en torneo finalizado/cancelado (400 INVALID_OPERATION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('errorCase es INVALID_OPERATION', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('INVALID_OPERATION');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Fase final cerrada\",\n  \"orden\": 2,\n  \"cantidadEquipos\": 4\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoFinalizadoId}}/fase-final",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoFinalizadoId}}", "fase-final"]
+            }
+          }
+        },
+        {
+          "name": "5. Crear fase final en torneo inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('errorCase es NOT_FOUND', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Fase final\",\n  \"orden\": 2,\n  \"cantidadEquipos\": 4\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/999999/fase-final",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "999999", "fase-final"]
+            }
+          }
+        },
+        {
+          "name": "6. Crear segunda fase final en el mismo torneo (409 ALREADY_EXISTS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 409 Conflict', function () {",
+                  "  pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test('errorCase es ALREADY_EXISTS', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('ALREADY_EXISTS');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Otra fase final\",\n  \"orden\": 3,\n  \"cantidadEquipos\": 4\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/fase-final",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoId}}", "fase-final"]
+            }
+          }
+        },
+        {
+          "name": "7. Obtener fase final del torneo (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Retorna la fase final creada', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.id).to.eql(Number(pm.environment.get('faseFinalId')));",
+                  "  pm.expect(body.tipo).to.eql('FINAL');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/fase-final",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoId}}", "fase-final"]
+            }
+          }
+        },
+        {
+          "name": "8. Obtener fase final de torneo sin fase final (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('errorCase es NOT_FOUND', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoSinFaseFinalId}}/fase-final",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoSinFaseFinalId}}", "fase-final"]
+            }
+          }
+        },
+        {
+          "name": "9. Actualizar fase final (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Actualiza nombre, orden y cantidadEquipos', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.nombre).to.eql('Fase final actualizada');",
+                  "  pm.expect(body.cantidadEquipos).to.eql(8);",
+                  "  pm.expect(body.tercerPuesto).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Fase final actualizada\",\n  \"orden\": 3,\n  \"cantidadEquipos\": 8,\n  \"tercerPuesto\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fases-finales/{{faseFinalId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases-finales", "{{faseFinalId}}"]
+            }
+          }
+        },
+        {
+          "name": "10. Actualizar cantidadEquipos en fase final con partidos (400 INVALID_OPERATION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('errorCase es INVALID_OPERATION', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('INVALID_OPERATION');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Fase final con partidos\",\n  \"orden\": 2,\n  \"cantidadEquipos\": 16,\n  \"tercerPuesto\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fases-finales/{{faseFinalConPartidosId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases-finales", "{{faseFinalConPartidosId}}"]
+            }
+          }
+        },
+        {
+          "name": "11. Actualizar fase final inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('errorCase es NOT_FOUND', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"No existe\",\n  \"orden\": 2,\n  \"cantidadEquipos\": 4\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fases-finales/999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases-finales", "999999"]
+            }
+          }
+        },
+        {
+          "name": "12. Consultar llaves de la fase final (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Respuesta cumple contrato LlavesResponseDto', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.all.keys('fase', 'cantidadEquipos', 'tercerPuesto', 'rondas');",
+                  "  pm.expect(body.fase.tipo).to.eql('FINAL');",
+                  "  pm.expect(body.rondas).to.be.an('array');",
+                  "  pm.expect(body.rondas.map((r) => r.ronda)).to.eql(['CUARTOS', 'SEMIFINAL', 'FINAL', 'TERCER_PUESTO']);",
+                  "  pm.expect(body.rondas[0].llaves).to.have.lengthOf(4);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases-finales/{{faseFinalId}}/llaves",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases-finales", "{{faseFinalId}}", "llaves"]
+            }
+          }
+        },
+        {
+          "name": "13. Consultar llaves de fase final inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('errorCase es NOT_FOUND', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases-finales/999999/llaves",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases-finales", "999999", "llaves"]
+            }
+          }
+        },
+        {
+          "name": "14. Eliminar fase final con partidos asociados (409 HAS_ASSOCIATIONS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 409 Conflict', function () {",
+                  "  pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test('errorCase es HAS_ASSOCIATIONS', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('HAS_ASSOCIATIONS');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases-finales/{{faseFinalConPartidosId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases-finales", "{{faseFinalConPartidosId}}"]
+            }
+          }
+        },
+        {
+          "name": "15. Eliminar fase final inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('errorCase es NOT_FOUND', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases-finales/999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases-finales", "999999"]
+            }
+          }
+        },
+        {
+          "name": "16. Eliminar fase final sin partidos (Happy Path - 204)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 204 No Content', function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases-finales/{{faseFinalId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases-finales", "{{faseFinalId}}"]
+            }
+          }
+        }
+      ]
     }
   ]
 }
