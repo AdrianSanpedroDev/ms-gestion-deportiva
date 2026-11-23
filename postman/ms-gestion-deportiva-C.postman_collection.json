@@ -1066,6 +1066,635 @@
           }
         }
       ]
+    },
+    {
+      "name": "HU-GC-04 - Gestionar grupos de competencia",
+      "description": "ACUERDOS 9.15: POST/GET /api/torneos/{torneoId}/grupos, GET/PUT/DELETE /api/grupos/{id}, POST/GET/DELETE /api/grupos/{grupoId}/equipos, GET /api/grupos/{grupoId}/tabla-posiciones",
+      "item": [
+        {
+          "name": "1. Crear grupo en torneo (Happy Path - 201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 201 Created', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Cumple contrato GrupoResponse y guarda grupoId', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.all.keys('id', 'torneo', 'nombre', 'orden', 'equipos');",
+                  "  pm.expect(body.equipos).to.be.an('array').that.is.empty;",
+                  "  pm.environment.set('grupoId', String(body.id));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Grupo C\",\n  \"orden\": {{ordenGrupo}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/grupos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoId}}", "grupos"]
+            }
+          }
+        },
+        {
+          "name": "2. Crear grupo con body inválido (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Reporta errores de validación por campo', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('nombre');",
+                  "  pm.expect(body).to.have.property('orden');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"   \",\n  \"orden\": 0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/grupos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoId}}", "grupos"]
+            }
+          }
+        },
+        {
+          "name": "3. Crear grupo con nombre duplicado en el torneo (409 ALREADY_EXISTS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 409 Conflict', function () {",
+                  "  pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test('Devuelve errorCase ALREADY_EXISTS', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('ALREADY_EXISTS');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Grupo C\",\n  \"orden\": {{ordenGrupo}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/grupos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoId}}", "grupos"]
+            }
+          }
+        },
+        {
+          "name": "4. Crear grupo con orden >= fase final (400 INVALID_OPERATION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Devuelve errorCase INVALID_OPERATION', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('INVALID_OPERATION');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Grupo Orden Invalido\",\n  \"orden\": {{ordenInvalidoGrupo}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/grupos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoId}}", "grupos"]
+            }
+          }
+        },
+        {
+          "name": "5. Crear grupo en torneo inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Devuelve errorCase NOT_FOUND', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Grupo Fantasma\",\n  \"orden\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/999999/grupos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "999999", "grupos"]
+            }
+          }
+        },
+        {
+          "name": "6. Listar grupos de un torneo (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Retorna arreglo de GrupoResponse', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.be.an('array').that.is.not.empty;",
+                  "  pm.expect(body[0]).to.have.all.keys('id', 'torneo', 'nombre', 'orden', 'equipos');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/grupos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoId}}", "grupos"]
+            }
+          }
+        },
+        {
+          "name": "7. Listar grupos filtrados por orden (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Todos los grupos tienen el orden solicitado', function () {",
+                  "  const body = pm.response.json();",
+                  "  const orden = Number(pm.environment.get('ordenGrupo'));",
+                  "  pm.expect(body).to.be.an('array');",
+                  "  body.forEach(function (g) { pm.expect(g.orden).to.eql(orden); });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/grupos?orden={{ordenGrupo}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoId}}", "grupos"],
+              "query": [{ "key": "orden", "value": "{{ordenGrupo}}" }]
+            }
+          }
+        },
+        {
+          "name": "8. Obtener grupo por ID (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Cumple contrato GrupoResponse', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.id).to.eql(Number(pm.environment.get('grupoId')));",
+                  "  pm.expect(body).to.have.all.keys('id', 'torneo', 'nombre', 'orden', 'equipos');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/{{grupoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grupos", "{{grupoId}}"]
+            }
+          }
+        },
+        {
+          "name": "9. Obtener grupo inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Devuelve errorCase NOT_FOUND', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grupos", "999999"]
+            }
+          }
+        },
+        {
+          "name": "10. Actualizar grupo con PUT (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Actualiza nombre y mantiene orden', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.nombre).to.eql('Grupo C Actualizado');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Grupo C Actualizado\",\n  \"orden\": {{ordenGrupo}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/{{grupoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grupos", "{{grupoId}}"]
+            }
+          }
+        },
+        {
+          "name": "11. Asignar equipos a un grupo (Happy Path - 201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 201 Created', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Retorna EquipoResumen[] de los equipos recién asignados', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.be.an('array').with.lengthOf(2);",
+                  "  pm.expect(body[0]).to.have.all.keys('id', 'nombre', 'activo');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipoIds\": [{{equipoId1}}, {{equipoId2}}]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/{{grupoId}}/equipos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grupos", "{{grupoId}}", "equipos"]
+            }
+          }
+        },
+        {
+          "name": "12. Asignar equipo duplicado en el mismo grupo (409 ALREADY_EXISTS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 409 Conflict', function () {",
+                  "  pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test('Devuelve errorCase ALREADY_EXISTS', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('ALREADY_EXISTS');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipoIds\": [{{equipoId1}}]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/{{grupoId}}/equipos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grupos", "{{grupoId}}", "equipos"]
+            }
+          }
+        },
+        {
+          "name": "13. Asignar equipo no inscrito en el torneo (400 INVALID_OPERATION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Devuelve errorCase INVALID_OPERATION', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('INVALID_OPERATION');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipoIds\": [{{equipoNoInscritoId}}]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/{{grupoId}}/equipos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grupos", "{{grupoId}}", "equipos"]
+            }
+          }
+        },
+        {
+          "name": "14. Asignar equipo ya presente en otro grupo del mismo orden (409 ALREADY_EXISTS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 409 Conflict', function () {",
+                  "  pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test('Devuelve errorCase ALREADY_EXISTS', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('ALREADY_EXISTS');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipoIds\": [{{equipoEnOtroGrupoMismoOrdenId}}]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/{{grupoId}}/equipos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grupos", "{{grupoId}}", "equipos"]
+            }
+          }
+        },
+        {
+          "name": "15. Listar equipos de un grupo (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Retorna arreglo de EquipoResumen', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.be.an('array').with.lengthOf(2);",
+                  "  pm.expect(body[0]).to.have.all.keys('id', 'nombre', 'activo');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/{{grupoId}}/equipos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grupos", "{{grupoId}}", "equipos"]
+            }
+          }
+        },
+        {
+          "name": "16. Consultar tabla de posiciones de un grupo (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Cumple contrato FilaPosicion[]', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.be.an('array').that.is.not.empty;",
+                  "  pm.expect(body[0]).to.have.all.keys('posicion', 'equipo', 'jugados', 'ganados', 'empatados', 'perdidos', 'aFavor', 'enContra', 'diferencia', 'puntos');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/{{grupoId}}/tabla-posiciones",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grupos", "{{grupoId}}", "tabla-posiciones"]
+            }
+          }
+        },
+        {
+          "name": "17. Retirar equipo de un grupo sin partidos (Happy Path - 204)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 204 No Content', function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/{{grupoId}}/equipos/{{equipoId1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grupos", "{{grupoId}}", "equipos", "{{equipoId1}}"]
+            }
+          }
+        },
+        {
+          "name": "18. Retirar equipo que tiene partidos en el grupo (400 INVALID_OPERATION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Devuelve errorCase INVALID_OPERATION', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('INVALID_OPERATION');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/{{grupoConPartidosId}}/equipos/{{equipoConPartidosEnGrupoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grupos", "{{grupoConPartidosId}}", "equipos", "{{equipoConPartidosEnGrupoId}}"]
+            }
+          }
+        },
+        {
+          "name": "19. Eliminar grupo con partidos asociados (409 HAS_ASSOCIATIONS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 409 Conflict', function () {",
+                  "  pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test('Devuelve errorCase HAS_ASSOCIATIONS', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('HAS_ASSOCIATIONS');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/{{grupoConPartidosId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grupos", "{{grupoConPartidosId}}"]
+            }
+          }
+        },
+        {
+          "name": "20. Eliminar grupo sin partidos (Happy Path - 204)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 204 No Content', function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/{{grupoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grupos", "{{grupoId}}"]
+            }
+          }
+        }
+      ]
     }
   ]
 }
