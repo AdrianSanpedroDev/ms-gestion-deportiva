@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-// TODO: HabilidadJugador es de C; compila cuando C suba habilidad-jugador/entities/habilidad-jugador.entity.ts
 import { HabilidadJugador } from '../habilidad-jugador/entities/habilidad-jugador.entity';
 import { Habilidad } from './entities/habilidad.entity';
 import { HabilidadController } from './habilidad.controller';

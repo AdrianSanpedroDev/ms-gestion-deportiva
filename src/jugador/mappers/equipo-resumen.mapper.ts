@@ -1,7 +1,5 @@
 // "import type": solo se usan como TIPOS (las líneas desaparecen al compilar).
-// TODO: ajustar la ruta cuando A suba common/dto
 import type { EquipoResumen } from '../../common/dto/equipo-resumen.dto';
-// TODO: Equipo es de A; compila cuando A suba equipo/entities/equipo.entity.ts
 import type { Equipo } from '../../equipo/entities/equipo.entity';
 
 // EquipoResumen (5.6) en UN solo lugar. Lo usan EquipoJugadorMapper (contratos) y PartidoMapper

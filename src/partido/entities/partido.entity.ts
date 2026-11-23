@@ -6,13 +6,9 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-// TODO: Equipo es de A (6.2 y 6.14); compila cuando A suba equipo/entities/equipo.entity.ts
 import { Equipo } from '../../equipo/entities/equipo.entity';
-// TODO: Escenario es de A (6.9 y 6.14); compila cuando A suba escenario/entities/escenario.entity.ts
 import { Escenario } from '../../escenario/entities/escenario.entity';
-// TODO: Fase es de C (6.11 y 6.14); compila cuando C suba fase/entities/fase.entity.ts
 import { Fase } from '../../fase/entities/fase.entity';
-// TODO: RondaFinal es de C (6.11 y 6.14); compila cuando C suba fase/entities/ronda-final.enum.ts
 import { RondaFinal } from '../../fase/entities/ronda-final.enum';
 import { EstadoPartido } from './estado-partido.enum';
 

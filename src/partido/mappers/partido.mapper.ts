@@ -1,15 +1,13 @@
 // "import type": Equipo, Escenario y Fase solo se usan como TIPOS de parámetros.
-// TODO: Equipo y Escenario son de A; compilan cuando A suba equipo/ y escenario/entities
 import type { Equipo } from '../../equipo/entities/equipo.entity';
 import type { Escenario } from '../../escenario/entities/escenario.entity';
 // FaseFinal y TipoFase SÍ se usan en tiempo de ejecución (instanceof y el valor del enum): import normal.
 // Fase solo como tipo ("type" delante de ese nombre).
-// TODO: son de C (6.11); compilan cuando C suba fase/entities/fase.entity.ts y tipo-fase.enum.ts
 import { type Fase, FaseFinal } from '../../fase/entities/fase.entity';
 import { TipoFase } from '../../fase/entities/tipo-fase.enum';
 // Se reutilizan helpers de jugador (mismo dueño, B): no se copian.
 import { EquipoResumenMapper } from '../../jugador/mappers/equipo-resumen.mapper';
-import { aFechaHoraIso } from '../../jugador/utils/fechas';
+import { aFechaHoraIso } from '../../common/utils/fechas';
 import { CrearPartidoDto } from '../dto/crear-partido.dto';
 import { PartidoResponseDto } from '../dto/partido-response.dto';
 import { tieneResultado } from '../entities/estado-partido.enum';

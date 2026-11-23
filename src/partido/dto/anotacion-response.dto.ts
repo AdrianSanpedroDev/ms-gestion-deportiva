@@ -1,5 +1,4 @@
 // "import type": solo se usan como TIPOS. Al compilar a JavaScript estas líneas desaparecen.
-// TODO: ajustar la ruta cuando A suba common/dto (los *Resumen de 5.6)
 import type { EquipoResumen } from '../../common/dto/equipo-resumen.dto';
 import type { JugadorResumen } from '../../common/dto/jugador-resumen.dto';
 

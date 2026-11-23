@@ -1,7 +1,6 @@
 import { ContratoResponseDto } from '../dto/contrato-response.dto';
 import { CrearContratoDto } from '../dto/crear-contrato.dto';
 // Aquí Equipo solo se usa como TIPO del parámetro → "import type" (desaparece al compilar).
-// TODO: Equipo es de A; compila cuando A suba equipo/entities/equipo.entity.ts
 import type { Equipo } from '../../equipo/entities/equipo.entity';
 import { EquipoJugador } from '../entities/equipo-jugador.entity';
 import { Jugador } from '../entities/jugador.entity';

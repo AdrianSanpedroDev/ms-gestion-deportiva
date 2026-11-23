@@ -5,7 +5,6 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-// TODO: Equipo es de A (ACUERDOS 6.2 y 6.14); compila cuando A suba equipo/entities/equipo.entity.ts
 import { Equipo } from '../../equipo/entities/equipo.entity';
 import { Jugador } from './jugador.entity';
 
