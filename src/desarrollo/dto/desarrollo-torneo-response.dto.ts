@@ -1,9 +1,8 @@
-// TODO: verificar rutas cuando A suba common/dto/*-resumen.dto.ts y torneo/entities/estado-torneo.enum.ts (ACUERDOS 5.6, 6.8 y 13.1)
-import type { DeporteResumen } from '../../common/dto/deporte-resumen.dto';
+import type { DeporteResumenDto as DeporteResumen } from '../../common/dto/deporte-resumen.dto';
 import type { EquipoResumen } from '../../common/dto/equipo-resumen.dto';
-import type { PartidoResumen } from '../../common/dto/partido-resumen.dto';
 import type { FilaPosicionDto } from '../../fase/dto/fila-posicion.dto';
 import type { RondaLlavesDto } from '../../fase/dto/llaves-response.dto';
+import type { PartidoResumen } from '../../fase/dto/partido-resumen.dto';
 import type { TipoFase } from '../../fase/entities/tipo-fase.enum';
 import type { EstadoTorneo } from '../../torneo/entities/estado-torneo.enum';
 

@@ -1,14 +1,3 @@
-jest.mock(
-  '../../torneo/entities/torneo.entity',
-  () => ({ Torneo: class Torneo {} }),
-  { virtual: true },
-);
-jest.mock(
-  '../../equipo/entities/equipo.entity',
-  () => ({ Equipo: class Equipo {} }),
-  { virtual: true },
-);
-
 import type { Equipo } from '../../equipo/entities/equipo.entity';
 import type { Torneo } from '../../torneo/entities/torneo.entity';
 import { Grupo } from '../entities/fase.entity';

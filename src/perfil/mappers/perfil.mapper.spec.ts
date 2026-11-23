@@ -1,12 +1,3 @@
-// =====================================================================================
-// TEMPORAL: quitar el jest.mock virtual cuando A suba equipo/entities/equipo.entity.ts
-// =====================================================================================
-jest.mock(
-  '../../equipo/entities/equipo.entity',
-  () => ({ Equipo: class Equipo {} }),
-  { virtual: true },
-);
-
 import type { Equipo } from '../../equipo/entities/equipo.entity';
 import { CategoriaHabilidad } from '../../habilidad/entities/categoria-habilidad.enum';
 import { Habilidad } from '../../habilidad/entities/habilidad.entity';

@@ -1,32 +1,3 @@
-jest.mock('../common/errores/error-case.enum', () => ({ ErrorCase: {} }), {
-  virtual: true,
-});
-jest.mock(
-  '../common/errores/application.exception',
-  () => ({ ApplicationException: class ApplicationException extends Error {} }),
-  { virtual: true },
-);
-jest.mock(
-  '../torneo/entities/estado-torneo.enum',
-  () => ({ EstadoTorneo: {} }),
-  { virtual: true },
-);
-jest.mock(
-  '../torneo/entities/torneo.entity',
-  () => ({ Torneo: class Torneo {} }),
-  { virtual: true },
-);
-jest.mock(
-  '../equipo/entities/equipo.entity',
-  () => ({ Equipo: class Equipo {} }),
-  { virtual: true },
-);
-jest.mock(
-  '../escenario/entities/escenario.entity',
-  () => ({ Escenario: class Escenario {} }),
-  { virtual: true },
-);
-
 import { Test } from '@nestjs/testing';
 import { FaseFinalController } from './fase-final.controller';
 import { FaseFinalService } from './fase-final.service';

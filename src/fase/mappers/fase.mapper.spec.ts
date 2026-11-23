@@ -1,12 +1,3 @@
-// =====================================================================================
-// TEMPORAL: quitar los jest.mock virtuales cuando A suba torneo/entities y equipo/entities.
-// =====================================================================================
-jest.mock(
-  '../../torneo/entities/torneo.entity',
-  () => ({ Torneo: class Torneo {} }),
-  { virtual: true },
-);
-
 import type { Torneo } from '../../torneo/entities/torneo.entity';
 import { FaseFinal, Grupo } from '../entities/fase.entity';
 import { TipoFase } from '../entities/tipo-fase.enum';

@@ -1,14 +1,12 @@
-// TODO: verificar ruta cuando A suba common/dto/partido-resumen.dto.ts (ACUERDOS 5.6)
-import type { PartidoResumen } from '../../common/dto/partido-resumen.dto';
+import { aFechaHoraIso } from '../../common/utils/fechas';
 import { EquipoResumenMapper } from '../../jugador/mappers/equipo-resumen.mapper';
-// TODO: reemplazar por aFechaHoraIso() de common/utils cuando A lo suba (ACUERDOS 5.5 y 13.2)
-import { aFechaHoraIso } from '../../jugador/utils/fechas';
 import { tieneResultado } from '../../partido/entities/estado-partido.enum';
 import type { Partido } from '../../partido/entities/partido.entity';
 import type {
   LlavesResponseDto,
   RondaLlavesDto,
 } from '../dto/llaves-response.dto';
+import type { PartidoResumen } from '../dto/partido-resumen.dto';
 import type { FaseFinal } from '../entities/fase.entity';
 import { FaseMapper } from './fase.mapper';
 

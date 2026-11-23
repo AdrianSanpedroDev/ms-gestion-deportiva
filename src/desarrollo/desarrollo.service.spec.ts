@@ -1,70 +1,3 @@
-// =====================================================================================
-// TEMPORAL: quitar los jest.mock virtuales cuando A suba common/errores, torneo/entities,
-// equipo/entities y escenario/entities (DT-C4).
-// =====================================================================================
-jest.mock(
-  '../common/errores/error-case.enum',
-  () => ({
-    ErrorCase: {
-      NOT_FOUND: 'NOT_FOUND',
-      ALREADY_EXISTS: 'ALREADY_EXISTS',
-      HAS_ASSOCIATIONS: 'HAS_ASSOCIATIONS',
-      INVALID_OPERATION: 'INVALID_OPERATION',
-      UNAUTHORIZED: 'UNAUTHORIZED',
-      FORBIDDEN: 'FORBIDDEN',
-      SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',
-    },
-  }),
-  { virtual: true },
-);
-jest.mock(
-  '../common/errores/application.exception',
-  () => ({
-    ApplicationException: class ApplicationException extends Error {
-      constructor(
-        public readonly errorCase: string,
-        message: string,
-      ) {
-        super(message);
-      }
-    },
-  }),
-  { virtual: true },
-);
-jest.mock(
-  '../torneo/entities/estado-torneo.enum',
-  () => ({
-    EstadoTorneo: {
-      INSCRIPCIONES_ABIERTAS: 'INSCRIPCIONES_ABIERTAS',
-      INSCRIPCIONES_CERRADAS: 'INSCRIPCIONES_CERRADAS',
-      EN_CURSO: 'EN_CURSO',
-      FINALIZADO: 'FINALIZADO',
-      CANCELADO: 'CANCELADO',
-    },
-  }),
-  { virtual: true },
-);
-jest.mock(
-  '../torneo/entities/torneo.entity',
-  () => ({ Torneo: class Torneo {} }),
-  { virtual: true },
-);
-jest.mock(
-  '../torneo/entities/inscripcion.entity',
-  () => ({ Inscripcion: class Inscripcion {} }),
-  { virtual: true },
-);
-jest.mock(
-  '../equipo/entities/equipo.entity',
-  () => ({ Equipo: class Equipo {} }),
-  { virtual: true },
-);
-jest.mock(
-  '../escenario/entities/escenario.entity',
-  () => ({ Escenario: class Escenario {} }),
-  { virtual: true },
-);
-
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ApplicationException } from '../common/errores/application.exception';
@@ -255,11 +188,13 @@ describe('DesarrolloService (HU-GC-08)', () => {
       equipoLocal: equipo1,
       equipoVisitante: equipo2,
       fechaHora: new Date(2026, 11, 15, 19, 0, 0),
+      escenario: null,
       estado: EstadoPartido.FINALIZADO,
       marcadorLocal: 3,
       marcadorVisitante: 0,
       ronda: RondaFinal.SEMIFINAL,
       numeroLlave: 1,
+      fechaCreacion: new Date(2026, 11, 1, 10, 0, 0),
     } as Partido;
 
     const partidoSemifinalCancelado = {
@@ -268,11 +203,13 @@ describe('DesarrolloService (HU-GC-08)', () => {
       equipoLocal: equipo2,
       equipoVisitante: equipo3,
       fechaHora: new Date(2026, 11, 15, 21, 0, 0),
+      escenario: null,
       estado: EstadoPartido.CANCELADO,
       marcadorLocal: null,
       marcadorVisitante: null,
       ronda: RondaFinal.SEMIFINAL,
       numeroLlave: 2,
+      fechaCreacion: new Date(2026, 11, 1, 10, 0, 0),
     } as Partido;
 
     partidoRepository.find.mockResolvedValue([

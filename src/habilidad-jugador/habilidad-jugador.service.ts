@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-// TODO: verificar ruta cuando A suba common/dto y common/errores (ACUERDOS 5.3, 5.6 y 13.1)
-import type { HabilidadResumen } from '../common/dto/habilidad-resumen.dto';
 import type { JugadorResumen } from '../common/dto/jugador-resumen.dto';
 import { ApplicationException } from '../common/errores/application.exception';
 import { ErrorCase } from '../common/errores/error-case.enum';
@@ -11,6 +9,7 @@ import { Habilidad } from '../habilidad/entities/habilidad.entity';
 import { Jugador } from '../jugador/entities/jugador.entity';
 import { JugadorMapper } from '../jugador/mappers/jugador.mapper';
 import { AsignarHabilidadDto } from './dto/asignar-habilidad.dto';
+import type { HabilidadResumen } from './dto/habilidad-resumen.dto';
 import { HabilidadJugador } from './entities/habilidad-jugador.entity';
 import { HabilidadJugadorMapper } from './mappers/habilidad-jugador.mapper';
 

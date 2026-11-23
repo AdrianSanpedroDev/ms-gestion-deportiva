@@ -6,16 +6,6 @@ import { TipoDocumento } from '../jugador/entities/tipo-documento.enum';
 import { HabilidadJugadorController } from './habilidad-jugador.controller';
 import { HabilidadJugadorService } from './habilidad-jugador.service';
 
-// Mock virtual temporal para resolver imports del service cuando aún no existe common/errores.
-jest.mock('../common/errores/error-case.enum', () => ({ ErrorCase: {} }), {
-  virtual: true,
-});
-jest.mock(
-  '../common/errores/application.exception',
-  () => ({ ApplicationException: class ApplicationException extends Error {} }),
-  { virtual: true },
-);
-
 describe('HabilidadJugadorController', () => {
   let controller: HabilidadJugadorController;
 

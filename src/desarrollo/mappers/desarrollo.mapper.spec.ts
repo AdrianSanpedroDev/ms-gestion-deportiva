@@ -1,23 +1,3 @@
-// TEMPORAL: quitar los jest.mock virtuales cuando A suba torneo/entities (DT-C4).
-jest.mock(
-  '../../torneo/entities/torneo.entity',
-  () => ({ Torneo: class Torneo {} }),
-  { virtual: true },
-);
-jest.mock(
-  '../../torneo/entities/estado-torneo.enum',
-  () => ({
-    EstadoTorneo: {
-      INSCRIPCIONES_ABIERTAS: 'INSCRIPCIONES_ABIERTAS',
-      INSCRIPCIONES_CERRADAS: 'INSCRIPCIONES_CERRADAS',
-      EN_CURSO: 'EN_CURSO',
-      FINALIZADO: 'FINALIZADO',
-      CANCELADO: 'CANCELADO',
-    },
-  }),
-  { virtual: true },
-);
-
 import type { Equipo } from '../../equipo/entities/equipo.entity';
 import { FaseFinal, Grupo } from '../../fase/entities/fase.entity';
 import { RondaFinal } from '../../fase/entities/ronda-final.enum';

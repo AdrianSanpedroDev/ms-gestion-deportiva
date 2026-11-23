@@ -1,44 +1,5 @@
-// =====================================================================================
-// TEMPORAL: quitar los jest.mock virtuales cuando A suba common/errores, torneo/entities,
-// equipo/entities y escenario/entities (DT-C4).
-// =====================================================================================
-jest.mock(
-  '../common/errores/error-case.enum',
-  () => ({ ErrorCase: { NOT_FOUND: 'NOT_FOUND' } }),
-  { virtual: true },
-);
-jest.mock(
-  '../common/errores/application.exception',
-  () => ({ ApplicationException: class ApplicationException extends Error {} }),
-  { virtual: true },
-);
-jest.mock(
-  '../torneo/entities/estado-torneo.enum',
-  () => ({ EstadoTorneo: { EN_CURSO: 'EN_CURSO' } }),
-  { virtual: true },
-);
-jest.mock(
-  '../torneo/entities/torneo.entity',
-  () => ({ Torneo: class Torneo {} }),
-  { virtual: true },
-);
-jest.mock(
-  '../torneo/entities/inscripcion.entity',
-  () => ({ Inscripcion: class Inscripcion {} }),
-  { virtual: true },
-);
-jest.mock(
-  '../equipo/entities/equipo.entity',
-  () => ({ Equipo: class Equipo {} }),
-  { virtual: true },
-);
-jest.mock(
-  '../escenario/entities/escenario.entity',
-  () => ({ Escenario: class Escenario {} }),
-  { virtual: true },
-);
-
 import { Test } from '@nestjs/testing';
+import { EstadoTorneo } from '../torneo/entities/estado-torneo.enum';
 import type { FilaPosicionDto } from './dto/fila-posicion.dto';
 import type { GrupoResponseDto } from './dto/grupo-response.dto';
 import { GrupoController } from './grupo.controller';
@@ -46,7 +7,7 @@ import { GrupoService } from './grupo.service';
 
 const grupoEjemplo: GrupoResponseDto = {
   id: 3,
-  torneo: { id: 1, nombre: 'Copa Caldas 2026', estado: 'EN_CURSO' },
+  torneo: { id: 1, nombre: 'Copa Caldas 2026', estado: EstadoTorneo.EN_CURSO },
   nombre: 'Grupo A',
   orden: 1,
   equipos: [{ id: 4, nombre: 'Once Caldas', activo: true }],

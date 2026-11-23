@@ -1,18 +1,3 @@
-// Mocks virtuales temporales para resolver imports del service cuando aún no existen common/errores y equipo/entities.
-jest.mock('../common/errores/error-case.enum', () => ({ ErrorCase: {} }), {
-  virtual: true,
-});
-jest.mock(
-  '../common/errores/application.exception',
-  () => ({ ApplicationException: class ApplicationException extends Error {} }),
-  { virtual: true },
-);
-jest.mock(
-  '../equipo/entities/equipo.entity',
-  () => ({ Equipo: class Equipo {} }),
-  { virtual: true },
-);
-
 import { PATH_METADATA } from '@nestjs/common/constants';
 import { Test } from '@nestjs/testing';
 import { CategoriaHabilidad } from '../habilidad/entities/categoria-habilidad.enum';

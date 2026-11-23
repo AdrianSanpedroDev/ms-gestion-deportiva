@@ -5,11 +5,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { SecurityGuard } from './common/guards/security.guard';
 import { NotificacionModule } from './common/notificacion/notificacion.module';
 import { DeporteModule } from './deporte/deporte.module';
+import { DesarrolloModule } from './desarrollo/desarrollo.module';
 import { EquipoModule } from './equipo/equipo.module';
 import { EscenarioModule } from './escenario/escenario.module';
+import { FaseModule } from './fase/fase.module';
+import { HabilidadJugadorModule } from './habilidad-jugador/habilidad-jugador.module';
 import { HabilidadModule } from './habilidad/habilidad.module';
 import { JugadorModule } from './jugador/jugador.module';
 import { PartidoModule } from './partido/partido.module';
+import { PerfilModule } from './perfil/perfil.module';
 import { TorneoModule } from './torneo/torneo.module';
 
 @Module({
@@ -38,6 +42,10 @@ import { TorneoModule } from './torneo/torneo.module';
     JugadorModule,
     HabilidadModule,
     PartidoModule,
+    HabilidadJugadorModule,
+    PerfilModule,
+    FaseModule,
+    DesarrolloModule,
   ],
   providers: [
     {

@@ -1,15 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-// TODO: verificar ruta cuando A suba common/errores y common/utils (ACUERDOS 5.3, 5.5 y 13.1)
 import { ApplicationException } from '../common/errores/application.exception';
 import { ErrorCase } from '../common/errores/error-case.enum';
+import { hoyBogota } from '../common/utils/fechas';
 import { HabilidadJugador } from '../habilidad-jugador/entities/habilidad-jugador.entity';
 // Entidades de B: SOLO lectura (ACUERDOS 7 y 13.3). Nunca save/update/delete ni inyectar sus services.
 import { EquipoJugador } from '../jugador/entities/equipo-jugador.entity';
 import { Jugador } from '../jugador/entities/jugador.entity';
-// TODO: reemplazar por hoyBogota() de common/utils cuando A lo suba (ACUERDOS 5.5 y 13.2)
-import { hoyBogota } from '../jugador/utils/fechas';
 import { PerfilJugadorResponseDto } from './dto/perfil-jugador-response.dto';
 import { PerfilMapper } from './mappers/perfil.mapper';
 

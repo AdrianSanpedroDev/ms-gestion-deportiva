@@ -9,10 +9,9 @@ import {
   ParseIntPipe,
   Post,
 } from '@nestjs/common';
-// TODO: verificar ruta cuando A suba common/dto (ACUERDOS 5.6 y 13.1)
-import type { HabilidadResumen } from '../common/dto/habilidad-resumen.dto';
 import type { JugadorResumen } from '../common/dto/jugador-resumen.dto';
 import { AsignarHabilidadDto } from './dto/asignar-habilidad.dto';
+import type { HabilidadResumen } from './dto/habilidad-resumen.dto';
 import { HabilidadJugadorService } from './habilidad-jugador.service';
 
 // HU-GD-07 · ACUERDOS 9.12. Solo recibe HTTP, valida tipos y delega al service.

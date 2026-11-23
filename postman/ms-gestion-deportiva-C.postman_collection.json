@@ -17,6 +17,383 @@
   },
   "item": [
     {
+      "name": "00 - Seguridad y Permisos (ms_security)",
+      "description": "ACUERDOS 10.2–10.4: autenticación en ms_security (:8181), endpoint interno POST /api/internal/security/permissions-validation y validación 401/403 del SecurityGuard en ms-gestion-deportiva (:8182).",
+      "item": [
+        {
+          "name": "1. Login Administrador Deportivo (200 - guarda {{token}})",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Devuelve accessToken y lo guarda en {{token}}', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.accessToken).to.be.a('string').and.not.empty;",
+                  "  pm.environment.set('token', body.accessToken);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{securityBaseUrl}}/api/auth/login",
+              "host": [
+                "{{securityBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "2. Validar permiso interno permitido (200 - allowed: true)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Respuesta indica allowed = true', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.eql({ allowed: true });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"/api/torneos/{{torneoId}}/desarrollo\",\n  \"method\": \"GET\"\n}"
+            },
+            "url": {
+              "raw": "{{securityBaseUrl}}/api/internal/security/permissions-validation",
+              "host": [
+                "{{securityBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "internal",
+                "security",
+                "permissions-validation"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3. Validar permiso interno sin token (401 Unauthorized)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 401 Unauthorized', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"/api/torneos/{{torneoId}}/desarrollo\",\n  \"method\": \"GET\"\n}"
+            },
+            "url": {
+              "raw": "{{securityBaseUrl}}/api/internal/security/permissions-validation",
+              "host": [
+                "{{securityBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "internal",
+                "security",
+                "permissions-validation"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4. Validar permiso interno con body inválido (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Devuelve errores de validación por campo', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('url');",
+                  "  pm.expect(body).to.have.property('method');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"\",\n  \"method\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{securityBaseUrl}}/api/internal/security/permissions-validation",
+              "host": [
+                "{{securityBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "internal",
+                "security",
+                "permissions-validation"
+              ]
+            }
+          }
+        },
+        {
+          "name": "5. Login usuario sin rol ADMINISTRADOR DEPORTIVO (200 - guarda {{tokenSinRol}})",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Devuelve accessToken y lo guarda en {{tokenSinRol}}', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.accessToken).to.be.a('string').and.not.empty;",
+                  "  pm.environment.set('tokenSinRol', body.accessToken);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{sinRolEmail}}\",\n  \"password\": \"{{sinRolPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{securityBaseUrl}}/api/auth/login",
+              "host": [
+                "{{securityBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "6. Validar permiso interno denegado (200 - allowed: false)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Respuesta indica allowed = false', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.eql({ allowed: false });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenSinRol}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"/api/torneos/{{torneoId}}/desarrollo\",\n  \"method\": \"GET\"\n}"
+            },
+            "url": {
+              "raw": "{{securityBaseUrl}}/api/internal/security/permissions-validation",
+              "host": [
+                "{{securityBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "internal",
+                "security",
+                "permissions-validation"
+              ]
+            }
+          }
+        },
+        {
+          "name": "7. SecurityGuard rechaza petición sin token en ms-gestion-deportiva (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 401 Unauthorized', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test('errorCase es UNAUTHORIZED', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('UNAUTHORIZED');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/fases",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "{{torneoId}}",
+                "fases"
+              ]
+            }
+          }
+        },
+        {
+          "name": "8. SecurityGuard rechaza usuario sin rol ADMINISTRADOR DEPORTIVO (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 403 Forbidden', function () {",
+                  "  pm.response.to.have.status(403);",
+                  "});",
+                  "pm.test('errorCase es FORBIDDEN', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('FORBIDDEN');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenSinRol}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/fases",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "{{torneoId}}",
+                "fases"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "HU-GD-07 - Asignar habilidades a jugadores",
       "description": "ACUERDOS 9.12: POST /api/jugadores/{jugadorId}/habilidades, GET /api/jugadores/{jugadorId}/habilidades, GET /api/habilidades/{habilidadId}/jugadores, DELETE /api/jugadores/{jugadorId}/habilidades/{habilidadId}",
       "item": [

@@ -1,19 +1,3 @@
-jest.mock(
-  '../../torneo/entities/torneo.entity',
-  () => ({ Torneo: class Torneo {} }),
-  { virtual: true },
-);
-jest.mock(
-  '../../equipo/entities/equipo.entity',
-  () => ({ Equipo: class Equipo {} }),
-  { virtual: true },
-);
-jest.mock(
-  '../../escenario/entities/escenario.entity',
-  () => ({ Escenario: class Escenario {} }),
-  { virtual: true },
-);
-
 import type { Equipo } from '../../equipo/entities/equipo.entity';
 import { EstadoPartido } from '../../partido/entities/estado-partido.enum';
 import type { Partido } from '../../partido/entities/partido.entity';

@@ -1,6 +1,5 @@
-// TODO: verificar rutas cuando A suba common/dto (ACUERDOS 5.6 y 13.1)
 import type { EquipoResumen } from '../../common/dto/equipo-resumen.dto';
-import type { HabilidadResumen } from '../../common/dto/habilidad-resumen.dto';
+import type { HabilidadResumen } from '../../habilidad-jugador/dto/habilidad-resumen.dto';
 import { TipoDocumento } from '../../jugador/entities/tipo-documento.enum';
 
 // DTOs exclusivos del perfil deportivo (ACUERDOS 9.13: C los define en perfil/dto/, sin reutilizar DTOs de B).
