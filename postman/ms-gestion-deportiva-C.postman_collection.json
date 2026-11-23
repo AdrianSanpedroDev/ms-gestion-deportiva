@@ -622,6 +622,450 @@
           }
         }
       ]
+    },
+    {
+      "name": "HU-GC-03 - Gestionar fases de un torneo",
+      "description": "ACUERDOS 9.14 (Solo Postman): GET /api/torneos/{torneoId}/fases, GET /api/fases/{id}, PATCH /api/fases/{id}, DELETE /api/fases/{id}.",
+      "item": [
+        {
+          "name": "1. Listar fases de un torneo (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Devuelve arreglo de FaseResponse ordenado por orden y nombre', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.be.an('array');",
+                  "  if (body.length > 0) {",
+                  "    pm.expect(body[0]).to.have.all.keys('id', 'torneo', 'nombre', 'tipo', 'orden', 'cantidadEquipos', 'tercerPuesto', 'cantidadPartidos');",
+                  "    pm.environment.set('faseId', String(body[0].id));",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/fases",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoId}}", "fases"]
+            }
+          }
+        },
+        {
+          "name": "2. Listar fases de torneo inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Devuelve errorCase NOT_FOUND', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('NOT_FOUND');",
+                  "  pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/999999/fases",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "999999", "fases"]
+            }
+          }
+        },
+        {
+          "name": "3. Consultar detalle de fase (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Respuesta cumple contrato FaseResponse', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.all.keys('id', 'torneo', 'nombre', 'tipo', 'orden', 'cantidadEquipos', 'tercerPuesto', 'cantidadPartidos');",
+                  "  pm.expect(body.torneo).to.have.all.keys('id', 'nombre', 'estado');",
+                  "  pm.expect(body.cantidadEquipos).to.be.a('number');",
+                  "  pm.expect(body.cantidadPartidos).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/{{faseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases", "{{faseId}}"]
+            }
+          }
+        },
+        {
+          "name": "4. Consultar fase inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Devuelve errorCase NOT_FOUND', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases", "999999"]
+            }
+          }
+        },
+        {
+          "name": "5. Actualizar nombre y orden de fase (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Actualiza nombre con trim y orden correctamente', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.nombre).to.eql('Grupo A Actualizado');",
+                  "  pm.expect(body.orden).to.eql(1);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"  Grupo A Actualizado  \",\n  \"orden\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/{{faseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases", "{{faseId}}"]
+            }
+          }
+        },
+        {
+          "name": "6. Actualizar fase con body inválido (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Reporta errores de validación en nombre y orden', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('nombre');",
+                  "  pm.expect(body).to.have.property('orden');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"   \",\n  \"orden\": 0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/{{faseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases", "{{faseId}}"]
+            }
+          }
+        },
+        {
+          "name": "7. Actualizar fase con body vacío (400 INVALID_OPERATION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Devuelve errorCase INVALID_OPERATION', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('INVALID_OPERATION');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/{{faseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases", "{{faseId}}"]
+            }
+          }
+        },
+        {
+          "name": "8. Actualizar fase con nombre duplicado en el mismo torneo (409 ALREADY_EXISTS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 409 Conflict', function () {",
+                  "  pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test('Devuelve errorCase ALREADY_EXISTS', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('ALREADY_EXISTS');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"{{faseNombreDuplicado}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/{{faseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases", "{{faseId}}"]
+            }
+          }
+        },
+        {
+          "name": "9. Actualizar orden de grupo >= orden de FaseFinal (400 INVALID_OPERATION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Devuelve errorCase INVALID_OPERATION', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('INVALID_OPERATION');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orden\": {{ordenInvalidoGrupo}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/{{faseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases", "{{faseId}}"]
+            }
+          }
+        },
+        {
+          "name": "10. Actualizar fase de torneo FINALIZADO o CANCELADO (400 INVALID_OPERATION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Devuelve errorCase INVALID_OPERATION', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('INVALID_OPERATION');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"No permitido\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/{{faseTorneoFinalizadoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases", "{{faseTorneoFinalizadoId}}"]
+            }
+          }
+        },
+        {
+          "name": "11. Eliminar fase con partidos asociados (409 HAS_ASSOCIATIONS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 409 Conflict', function () {",
+                  "  pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test('Devuelve errorCase HAS_ASSOCIATIONS', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('HAS_ASSOCIATIONS');",
+                  "  pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/{{faseConPartidosId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases", "{{faseConPartidosId}}"]
+            }
+          }
+        },
+        {
+          "name": "12. Eliminar fase sin partidos (Happy Path - 204)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 204 No Content', function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/{{faseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases", "{{faseId}}"]
+            }
+          }
+        },
+        {
+          "name": "13. Eliminar fase inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Devuelve errorCase NOT_FOUND', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases", "999999"]
+            }
+          }
+        }
+      ]
     }
   ]
 }
