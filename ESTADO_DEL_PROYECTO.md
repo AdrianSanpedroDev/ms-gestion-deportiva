@@ -70,7 +70,7 @@
 |---|---|---|---|---|
 | 1 | `AInicial` | A | `deporte`, `equipo`, `equipo_deporte`, `escenario`, `torneo`, `inscripcion` | ⬜ |
 | 2 | `BJugadoresHabilidades` | B | `jugador`, `equipo_jugador`, `habilidad` | ⛔ espera #1 |
-| 3 | `CFasesHabilidadJugador` | C | `fase`, `grupo_equipo`, `habilidad_jugador` | ⛔ espera #2 |
+| 3 | `CFasesHabilidadJugador` | C | `fase`, `grupo_equipo`, `habilidad_jugador` | 🟡 creada en `feature/C-habilidad-jugador` (`1795450000000-CFasesHabilidadJugador.ts`), pendiente ejecutar cuando A suba `AInicial` |
 | 4 | `BPartidosAnotaciones` | B | `partido`, `anotacion` | ⛔ espera #3 |
 
 - ⬜ Las 14 tablas se crean con `npm run migration:run`
@@ -94,7 +94,7 @@ Columnas: **Ent** = entidad/migración · **API** = endpoints backend · **Front
 | GD-08 | Perfil deportivo | C | — | ✅ 1 endpoint (`GET /api/jugadores/{jugadorId}/perfil`) + 13 pruebas Jest OK + Oxlint/Prettier OK · no compila completo hasta que A suba `common/` y `Equipo` | ⬜ *(deuda técnica)* | ⬜ *(deuda técnica `ms_security`)* | ✅ 5 casos (`postman/ms-gestion-deportiva-C.postman_collection.json`) | `feature/C-habilidad-jugador` (sin PR) |
 | GC-01 | Torneos | A | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | |
 | GC-02 | Inscripciones | A | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | |
-| GC-03 | Fases | C | ⬜ | ⬜ | — | ⬜ *(deuda técnica `ms_security`)* | ⬜ | |
+| GC-03 | Fases | C | 🟡 `Fase`/`Grupo`/`FaseFinal`, `GrupoEquipo`, `TipoFase`, `RondaFinal` + migración `CFasesHabilidadJugador` | ✅ 4 endpoints + 37 pruebas Jest OK + Oxlint/Prettier OK · no compila completo hasta que A suba `common/` y `Torneo` | — | ⬜ *(deuda técnica `ms_security`)* | ✅ 13 casos (`postman/ms-gestion-deportiva-C.postman_collection.json`) | `feature/C-habilidad-jugador` (sin PR) |
 | GC-04 | Grupos | C | ⬜ | ⬜ | — | ⬜ *(deuda técnica `ms_security`)* | ⬜ | |
 | GC-05 | Fase final | C | ⬜ | ⬜ | ⬜ *(deuda técnica)* | ⬜ *(deuda técnica `ms_security`)* | ⬜ | |
 | GC-06 | Partidos | B | 🟡 `Partido` y `Anotacion` escritas contra el contrato, falta migración `BPartidosAnotaciones` | ✅ 7 endpoints + reglas + correo + pruebas + revisión · no compila sin A (`common/`, `Equipo`, `Torneo`, `Inscripcion`, `Escenario`) y C (`Fase`, `GrupoEquipo`, `RondaFinal`, `TipoFase`) | ⬜ | ⬜ | ⬜ | `feature/B-habilidades` (sin PR) |
@@ -119,7 +119,7 @@ Qué necesita cada uno de otro. El dueño marca ✅ cuando lo sube a `main`.
 | B | Entidades `Torneo`, `Inscripcion`, `Escenario` | A | Validar partidos (GC-06) | ⬜ |
 | B | `CorreoService` + `DestinatariosService` + `/api/notifications/send` | A | Correos de GC-06 y GC-07 | ⬜ |
 | B, C | Base del front (`gestionClient`, rutas, componentes vacíos) | A | Pantallas | ⬜ |
-| B | `Fase`/`Grupo`/`FaseFinal`, `GrupoEquipo` + migración C | C | `Partido` (GC-06) | ⬜ |
+| B | `Fase`/`Grupo`/`FaseFinal`, `GrupoEquipo` + migración C | C | `Partido` (GC-06) | 🟡 en `feature/C-habilidad-jugador` |
 | B | Entidad `HabilidadJugador` | C | Eliminar jugador / habilidad | 🟡 en `feature/C-habilidad-jugador` |
 | C | Confirmar archivo `common/dto/habilidad-resumen.dto.ts` (exporta `HabilidadResumen`) | A | GD-07 y GD-08 | ⬜ |
 | B | Confirmar archivos: A → `common/notificacion/correo.service.ts` y `destinatarios.service.ts`, `common/errores/*`, `common/dto/*-resumen.dto.ts` · C → `fase/entities/ronda-final.enum.ts` y `tipo-fase.enum.ts` (B los importa con esos nombres) | A, C | GC-06, GC-07 | ⬜ |
@@ -136,7 +136,7 @@ Qué necesita cada uno de otro. El dueño marca ✅ cuando lo sube a `main`.
 |---|---|---|---|---|
 | DT-C1 | Frontend (`frontend-app`) | Pantallas y componentes de C: `HabilidadesJugador` (GD-07), `/jugadores/:id/perfil` (GD-08), `/torneos/:id/fase-final` (GC-05) y `/torneos/:id/desarrollo` (GC-08). Se prioriza terminar primero backend + Jest + Postman de todas las HU de C. | Cuando A suba la base del front (`gestionClient.js`, rutas y placeholders) y se cierre el backend de C | ⬜ |
 | DT-C2 | Seguridad (`ms_security`) | Endpoint `POST /api/internal/security/permissions-validation`, creación/asignación del rol `ADMINISTRADOR DEPORTIVO` y registro de los permisos HTTP de todas las HU de C. | En sesión dedicada en `ProyectoDesarrolloBackend` tras completar el backend de las HU de C | ⬜ |
-| DT-C3 | Migración C (`CFasesHabilidadJugador`) | Crear la migración #3 (`fase`, `grupo_equipo`, `habilidad_jugador`) con timestamp intermedio entre `1795400000000-BJugadoresHabilidades.ts` y `1795500000000-BPartidosAnotaciones.ts`. | Al definir las entidades de `fase/` (HU-GC-03/04/05) | ⬜ |
+| DT-C3 | Migración C (`CFasesHabilidadJugador`) | Crear la migración #3 (`fase`, `grupo_equipo`, `habilidad_jugador`) con timestamp intermedio entre `1795400000000-BJugadoresHabilidades.ts` y `1795500000000-BPartidosAnotaciones.ts`. | Creada en `feature/C-habilidad-jugador` (HU-GC-03); falta `migration:run` cuando A suba `AInicial` | 🟡 |
 | DT-C4 | Mocks temporales Jest y helpers temporales | Retirar los `jest.mock(..., { virtual: true })` de `common/errores` y `equipo/entities/equipo.entity` en los `.spec.ts` de C, cambiar el import temporal de `hoyBogota` en `perfil.service.ts` hacia `common/utils`, y ejecutar compilación (`npm run build`) + pruebas de integración reales con la colección de Postman. | Cuando A suba `src/common/` y sus entidades a `main` | ⬜ |
 | DT-C5 | Entorno local Node.js | Actualizar Node local de `v22.16.0` a `v24.9+` para ejecutar `npm test` de NestJS 12 (ESM) + Jest 30 de forma nativa. | Antes de la Fase 2 (integración) | ⬜ |
 
@@ -158,6 +158,7 @@ Lo más reciente arriba. Una línea por avance: fecha · quién · qué (con PR 
 
 | Fecha | Quién | Avance |
 |---|---|---|
+| 22/11 | Andrei | `feature/C-habilidad-jugador` (sin PR): **backend de HU-GC-03 completo** (`src/fase/`: entidades STI `Fase`/`Grupo`/`FaseFinal`, `GrupoEquipo`, `TipoFase`, `RondaFinal`, `ActualizarFaseDto`, `FaseResponseDto`, `FaseMapper`, `FaseRepository`, `FaseService`, `FaseController`, `FaseModule`, migración #3 `1795450000000-CFasesHabilidadJugador.ts`), **37 pruebas Jest OK** (compatibilidad verificada `602/602` con `habilidad-jugador`, `perfil` y `partido` de B), Prettier/Oxlint en 0 errores y 13 casos agregados en `postman/ms-gestion-deportiva-C.postman_collection.json`. |
 | 22/11 | Andrei | `feature/C-habilidad-jugador` (sin PR): **backend de HU-GD-08 completo** (`src/perfil/`: DTOs exclusivos, `PerfilMapper`, `PerfilService` solo lectura, `PerfilController`, `PerfilModule`), **13 pruebas Jest OK** (compatibilidad verificada `280/280` con `habilidad-jugador`, `jugador` y `habilidad`), Prettier/Oxlint en 0 errores y 5 casos agregados en `postman/ms-gestion-deportiva-C.postman_collection.json` + variables locales en environment. |
 | 22/11 | Andrei | `feature/C-habilidad-jugador` (commit `b1feca7`, sin PR): **backend de HU-GD-07 completo** (`HabilidadJugador`, DTO, mapper, service, controller, module), **33 pruebas Jest OK** (y compatibilidad verificada `88/88` con `jugador` y `habilidad` de B), Prettier/Oxlint en 0 errores y colección Postman v2.1 con 12 casos (`postman/ms-gestion-deportiva-C.postman_collection.json`). Se revierte `typeorm.config.ts` pasando la configuración local de BD a `.env` y se documenta la tabla de deuda técnica de C (`DT-C1` a `DT-C5`). |
 | 21/11 | Adrián | `feature/B-habilidades` (sin PR): **backend de GC-06 y GC-07 completo** (partidos, resultado, anotaciones, 3 correos), y chequeos de `eliminar` en jugador y habilidad. **753 pruebas OK.** Compila cuando A y C suban sus entidades y `common/` (ver bloqueos). ⚠️ El manifiesto de `docs/husNico` contradice ACUERDOS (carpetas `modules/`, `NotFoundException`, `{statusCode, data}`, `Equipo.estado`): seguir ACUERDOS 4.1, 5.1, 6.2 y 6.14 |
