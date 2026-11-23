@@ -1,0 +1,2440 @@
+{
+  "info": {
+    "_postman_id": "c7a1d2e0-0707-4c00-9c00-000000000001",
+    "name": "ms-gestion-deportiva (Persona C)",
+    "description": "Colección de pruebas de integración HTTP (Postman v2.1) para las Historias de Usuario asignadas a Persona C (Andrei). Contrato: ACUERDOS.md sección 9.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "HU-GD-07 - Asignar habilidades a jugadores",
+      "description": "ACUERDOS 9.12: POST /api/jugadores/{jugadorId}/habilidades, GET /api/jugadores/{jugadorId}/habilidades, GET /api/habilidades/{habilidadId}/jugadores, DELETE /api/jugadores/{jugadorId}/habilidades/{habilidadId}",
+      "item": [
+        {
+          "name": "1. Asignar habilidad a jugador (Happy Path - 201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 201 Created', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Respuesta cumple contrato HabilidadResumen', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.all.keys('id', 'nombre', 'categoria');",
+                  "  pm.expect(body.id).to.eql(Number(pm.environment.get('habilidadId')));",
+                  "  pm.environment.set('habilidadAsignadaId', String(body.id));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"habilidadId\": {{habilidadId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}/habilidades",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jugadores", "{{jugadorId}}", "habilidades"]
+            }
+          }
+        },
+        {
+          "name": "2. Asignar habilidad duplicada al mismo jugador (409 ALREADY_EXISTS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 409 Conflict', function () {",
+                  "  pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test('Devuelve errorCase ALREADY_EXISTS', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('ALREADY_EXISTS');",
+                  "  pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"habilidadId\": {{habilidadId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}/habilidades",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jugadores", "{{jugadorId}}", "habilidades"]
+            }
+          }
+        },
+        {
+          "name": "3. Asignar habilidad con body inválido (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Reporta error de validación en habilidadId', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('habilidadId');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}/habilidades",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jugadores", "{{jugadorId}}", "habilidades"]
+            }
+          }
+        },
+        {
+          "name": "4. Asignar habilidad a jugador inactivo (400 INVALID_OPERATION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Devuelve errorCase INVALID_OPERATION', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('INVALID_OPERATION');",
+                  "  pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"habilidadId\": {{habilidadId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorInactivoId}}/habilidades",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jugadores", "{{jugadorInactivoId}}", "habilidades"]
+            }
+          }
+        },
+        {
+          "name": "5. Asignar habilidad inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Devuelve errorCase NOT_FOUND', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"habilidadId\": 999999\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}/habilidades",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jugadores", "{{jugadorId}}", "habilidades"]
+            }
+          }
+        },
+        {
+          "name": "6. Listar habilidades de un jugador (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Devuelve arreglo con la habilidad asignada', function () {",
+                  "  const list = pm.response.json();",
+                  "  pm.expect(list).to.be.an('array');",
+                  "  const esperada = Number(pm.environment.get('habilidadAsignadaId') || pm.environment.get('habilidadId'));",
+                  "  const encontrada = list.find((h) => h.id === esperada);",
+                  "  pm.expect(encontrada).to.not.be.undefined;",
+                  "  pm.expect(encontrada).to.have.all.keys('id', 'nombre', 'categoria');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}/habilidades",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jugadores", "{{jugadorId}}", "habilidades"]
+            }
+          }
+        },
+        {
+          "name": "7. Listar habilidades de jugador inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Devuelve errorCase NOT_FOUND', function () {",
+                  "  pm.expect(pm.response.json().errorCase).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/999999/habilidades",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jugadores", "999999", "habilidades"]
+            }
+          }
+        },
+        {
+          "name": "8. Listar jugadores que poseen una habilidad (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Devuelve arreglo de JugadorResumen con el jugador asignado', function () {",
+                  "  const list = pm.response.json();",
+                  "  pm.expect(list).to.be.an('array');",
+                  "  const esperado = Number(pm.environment.get('jugadorId'));",
+                  "  const encontrado = list.find((j) => j.id === esperado);",
+                  "  pm.expect(encontrado).to.not.be.undefined;",
+                  "  pm.expect(encontrado).to.have.all.keys('id', 'tipoDocumento', 'numeroDocumento', 'nombreCompleto', 'activo');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/habilidades/{{habilidadId}}/jugadores",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "habilidades", "{{habilidadId}}", "jugadores"]
+            }
+          }
+        },
+        {
+          "name": "9. Listar jugadores de habilidad inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Devuelve errorCase NOT_FOUND', function () {",
+                  "  pm.expect(pm.response.json().errorCase).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/habilidades/999999/jugadores",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "habilidades", "999999", "jugadores"]
+            }
+          }
+        },
+        {
+          "name": "10. Retirar habilidad de jugador (204 No Content)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 204 No Content', function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});",
+                  "pm.test('Respuesta sin cuerpo', function () {",
+                  "  pm.expect(pm.response.text()).to.eql('');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}/habilidades/{{habilidadId}}",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "jugadores",
+                "{{jugadorId}}",
+                "habilidades",
+                "{{habilidadId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "11. Retirar habilidad ya retirada / inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Devuelve errorCase NOT_FOUND', function () {",
+                  "  pm.expect(pm.response.json().errorCase).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}/habilidades/{{habilidadId}}",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "jugadores",
+                "{{jugadorId}}",
+                "habilidades",
+                "{{habilidadId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "12. Verificar que la habilidad sigue existiendo tras retirarla (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('La habilidad sigue existiendo en el catálogo (200 OK)', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.id).to.eql(Number(pm.environment.get('habilidadId')));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/habilidades/{{habilidadId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "habilidades", "{{habilidadId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "HU-GD-08 - Consultar perfil deportivo del jugador",
+      "description": "ACUERDOS 9.13: GET /api/jugadores/{jugadorId}/perfil (y búsqueda previa de jugador en GET /api/jugadores?busqueda= de ACUERDOS 9.7)",
+      "item": [
+        {
+          "name": "1. Buscar jugador registrado por texto (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Devuelve arreglo de jugadores registrados', function () {",
+                  "  const list = pm.response.json();",
+                  "  pm.expect(list).to.be.an('array');",
+                  "  if (list.length > 0) {",
+                  "    pm.expect(list[0]).to.have.property('id');",
+                  "    pm.expect(list[0]).to.have.property('nombreCompleto');",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores?busqueda={{busquedaJugador}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jugadores"],
+              "query": [
+                {
+                  "key": "busqueda",
+                  "value": "{{busquedaJugador}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "2. Consultar perfil deportivo completo de jugador (Happy Path - 200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Respuesta cumple contrato PerfilJugadorResponse', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.all.keys('jugador', 'equiposActuales', 'historialEquipos', 'habilidades', 'tieneEquipos', 'tieneHabilidades', 'mensajes');",
+                  "  pm.expect(body.jugador).to.have.all.keys('id', 'tipoDocumento', 'numeroDocumento', 'nombreCompleto', 'fechaNacimiento', 'edad', 'email', 'telefono', 'activo');",
+                  "  pm.expect(body.jugador.id).to.eql(Number(pm.environment.get('jugadorId')));",
+                  "  pm.expect(body.equiposActuales).to.be.an('array');",
+                  "  pm.expect(body.historialEquipos).to.be.an('array');",
+                  "  pm.expect(body.habilidades).to.be.an('array');",
+                  "  pm.expect(body.tieneEquipos).to.be.a('boolean');",
+                  "  pm.expect(body.tieneHabilidades).to.be.a('boolean');",
+                  "  pm.expect(body.mensajes).to.be.an('array');",
+                  "});",
+                  "pm.test('Consistencia de banderas, estructuras internas y mensajes', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.tieneEquipos).to.eql(body.equiposActuales.length > 0);",
+                  "  pm.expect(body.tieneHabilidades).to.eql(body.habilidades.length > 0);",
+                  "  if (body.equiposActuales.length > 0) {",
+                  "    pm.expect(body.equiposActuales[0]).to.have.all.keys('equipo', 'fechaInicio', 'fechaFin');",
+                  "    pm.expect(body.equiposActuales[0].equipo).to.have.all.keys('id', 'nombre', 'activo');",
+                  "  }",
+                  "  if (body.historialEquipos.length > 0) {",
+                  "    pm.expect(body.historialEquipos[0]).to.have.all.keys('equipo', 'fechaInicio', 'fechaFin', 'fechaRetiro');",
+                  "    pm.expect(body.historialEquipos[0].equipo).to.have.all.keys('id', 'nombre', 'activo');",
+                  "  }",
+                  "  if (body.habilidades.length > 0) {",
+                  "    pm.expect(body.habilidades[0]).to.have.all.keys('id', 'nombre', 'categoria');",
+                  "  }",
+                  "  if (body.tieneEquipos && body.tieneHabilidades) {",
+                  "    pm.expect(body.mensajes).to.eql([]);",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}/perfil",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jugadores", "{{jugadorId}}", "perfil"]
+            }
+          }
+        },
+        {
+          "name": "3. Consultar perfil de jugador sin equipos activos ni habilidades (200 OK)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Indica ausencia de equipos activos y habilidades en mensajes', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.equiposActuales).to.eql([]);",
+                  "  pm.expect(body.habilidades).to.eql([]);",
+                  "  pm.expect(body.tieneEquipos).to.eql(false);",
+                  "  pm.expect(body.tieneHabilidades).to.eql(false);",
+                  "  pm.expect(body.mensajes).to.include('El jugador no tiene equipos asociados');",
+                  "  pm.expect(body.mensajes).to.include('El jugador no tiene habilidades registradas');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorSinDatosId}}/perfil",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jugadores", "{{jugadorSinDatosId}}", "perfil"]
+            }
+          }
+        },
+        {
+          "name": "4. Consultar perfil con jugadorId inválido (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/abc/perfil",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jugadores", "abc", "perfil"]
+            }
+          }
+        },
+        {
+          "name": "5. Consultar perfil de jugador inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Devuelve errorCase NOT_FOUND', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('NOT_FOUND');",
+                  "  pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/999999/perfil",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jugadores", "999999", "perfil"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "HU-GC-03 - Gestionar fases de un torneo",
+      "description": "ACUERDOS 9.14 (Solo Postman): GET /api/torneos/{torneoId}/fases, GET /api/fases/{id}, PATCH /api/fases/{id}, DELETE /api/fases/{id}.",
+      "item": [
+        {
+          "name": "1. Listar fases de un torneo (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Devuelve arreglo de FaseResponse ordenado por orden y nombre', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.be.an('array');",
+                  "  if (body.length > 0) {",
+                  "    pm.expect(body[0]).to.have.all.keys('id', 'torneo', 'nombre', 'tipo', 'orden', 'cantidadEquipos', 'tercerPuesto', 'cantidadPartidos');",
+                  "    pm.environment.set('faseId', String(body[0].id));",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/fases",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoId}}", "fases"]
+            }
+          }
+        },
+        {
+          "name": "2. Listar fases de torneo inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Devuelve errorCase NOT_FOUND', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('NOT_FOUND');",
+                  "  pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/999999/fases",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "999999", "fases"]
+            }
+          }
+        },
+        {
+          "name": "3. Consultar detalle de fase (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Respuesta cumple contrato FaseResponse', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.all.keys('id', 'torneo', 'nombre', 'tipo', 'orden', 'cantidadEquipos', 'tercerPuesto', 'cantidadPartidos');",
+                  "  pm.expect(body.torneo).to.have.all.keys('id', 'nombre', 'estado');",
+                  "  pm.expect(body.cantidadEquipos).to.be.a('number');",
+                  "  pm.expect(body.cantidadPartidos).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/{{faseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases", "{{faseId}}"]
+            }
+          }
+        },
+        {
+          "name": "4. Consultar fase inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Devuelve errorCase NOT_FOUND', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases", "999999"]
+            }
+          }
+        },
+        {
+          "name": "5. Actualizar nombre y orden de fase (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Actualiza nombre con trim y orden correctamente', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.nombre).to.eql('Grupo A Actualizado');",
+                  "  pm.expect(body.orden).to.eql(1);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"  Grupo A Actualizado  \",\n  \"orden\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/{{faseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases", "{{faseId}}"]
+            }
+          }
+        },
+        {
+          "name": "6. Actualizar fase con body inválido (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Reporta errores de validación en nombre y orden', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('nombre');",
+                  "  pm.expect(body).to.have.property('orden');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"   \",\n  \"orden\": 0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/{{faseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases", "{{faseId}}"]
+            }
+          }
+        },
+        {
+          "name": "7. Actualizar fase con body vacío (400 INVALID_OPERATION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Devuelve errorCase INVALID_OPERATION', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('INVALID_OPERATION');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/{{faseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases", "{{faseId}}"]
+            }
+          }
+        },
+        {
+          "name": "8. Actualizar fase con nombre duplicado en el mismo torneo (409 ALREADY_EXISTS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 409 Conflict', function () {",
+                  "  pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test('Devuelve errorCase ALREADY_EXISTS', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('ALREADY_EXISTS');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"{{faseNombreDuplicado}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/{{faseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases", "{{faseId}}"]
+            }
+          }
+        },
+        {
+          "name": "9. Actualizar orden de grupo >= orden de FaseFinal (400 INVALID_OPERATION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Devuelve errorCase INVALID_OPERATION', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('INVALID_OPERATION');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orden\": {{ordenInvalidoGrupo}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/{{faseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases", "{{faseId}}"]
+            }
+          }
+        },
+        {
+          "name": "10. Actualizar fase de torneo FINALIZADO o CANCELADO (400 INVALID_OPERATION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Devuelve errorCase INVALID_OPERATION', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('INVALID_OPERATION');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"No permitido\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/{{faseTorneoFinalizadoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases", "{{faseTorneoFinalizadoId}}"]
+            }
+          }
+        },
+        {
+          "name": "11. Eliminar fase con partidos asociados (409 HAS_ASSOCIATIONS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 409 Conflict', function () {",
+                  "  pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test('Devuelve errorCase HAS_ASSOCIATIONS', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('HAS_ASSOCIATIONS');",
+                  "  pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/{{faseConPartidosId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases", "{{faseConPartidosId}}"]
+            }
+          }
+        },
+        {
+          "name": "12. Eliminar fase sin partidos (Happy Path - 204)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 204 No Content', function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/{{faseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases", "{{faseId}}"]
+            }
+          }
+        },
+        {
+          "name": "13. Eliminar fase inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Devuelve errorCase NOT_FOUND', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases", "999999"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "HU-GC-04 - Gestionar grupos de competencia",
+      "description": "ACUERDOS 9.15: POST/GET /api/torneos/{torneoId}/grupos, GET/PUT/DELETE /api/grupos/{id}, POST/GET/DELETE /api/grupos/{grupoId}/equipos, GET /api/grupos/{grupoId}/tabla-posiciones",
+      "item": [
+        {
+          "name": "1. Crear grupo en torneo (Happy Path - 201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 201 Created', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Cumple contrato GrupoResponse y guarda grupoId', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.all.keys('id', 'torneo', 'nombre', 'orden', 'equipos');",
+                  "  pm.expect(body.equipos).to.be.an('array').that.is.empty;",
+                  "  pm.environment.set('grupoId', String(body.id));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Grupo C\",\n  \"orden\": {{ordenGrupo}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/grupos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoId}}", "grupos"]
+            }
+          }
+        },
+        {
+          "name": "2. Crear grupo con body inválido (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Reporta errores de validación por campo', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('nombre');",
+                  "  pm.expect(body).to.have.property('orden');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"   \",\n  \"orden\": 0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/grupos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoId}}", "grupos"]
+            }
+          }
+        },
+        {
+          "name": "3. Crear grupo con nombre duplicado en el torneo (409 ALREADY_EXISTS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 409 Conflict', function () {",
+                  "  pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test('Devuelve errorCase ALREADY_EXISTS', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('ALREADY_EXISTS');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Grupo C\",\n  \"orden\": {{ordenGrupo}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/grupos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoId}}", "grupos"]
+            }
+          }
+        },
+        {
+          "name": "4. Crear grupo con orden >= fase final (400 INVALID_OPERATION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Devuelve errorCase INVALID_OPERATION', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('INVALID_OPERATION');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Grupo Orden Invalido\",\n  \"orden\": {{ordenInvalidoGrupo}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/grupos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoId}}", "grupos"]
+            }
+          }
+        },
+        {
+          "name": "5. Crear grupo en torneo inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Devuelve errorCase NOT_FOUND', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Grupo Fantasma\",\n  \"orden\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/999999/grupos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "999999", "grupos"]
+            }
+          }
+        },
+        {
+          "name": "6. Listar grupos de un torneo (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Retorna arreglo de GrupoResponse', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.be.an('array').that.is.not.empty;",
+                  "  pm.expect(body[0]).to.have.all.keys('id', 'torneo', 'nombre', 'orden', 'equipos');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/grupos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoId}}", "grupos"]
+            }
+          }
+        },
+        {
+          "name": "7. Listar grupos filtrados por orden (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Todos los grupos tienen el orden solicitado', function () {",
+                  "  const body = pm.response.json();",
+                  "  const orden = Number(pm.environment.get('ordenGrupo'));",
+                  "  pm.expect(body).to.be.an('array');",
+                  "  body.forEach(function (g) { pm.expect(g.orden).to.eql(orden); });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/grupos?orden={{ordenGrupo}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoId}}", "grupos"],
+              "query": [{ "key": "orden", "value": "{{ordenGrupo}}" }]
+            }
+          }
+        },
+        {
+          "name": "8. Obtener grupo por ID (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Cumple contrato GrupoResponse', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.id).to.eql(Number(pm.environment.get('grupoId')));",
+                  "  pm.expect(body).to.have.all.keys('id', 'torneo', 'nombre', 'orden', 'equipos');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/{{grupoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grupos", "{{grupoId}}"]
+            }
+          }
+        },
+        {
+          "name": "9. Obtener grupo inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Devuelve errorCase NOT_FOUND', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grupos", "999999"]
+            }
+          }
+        },
+        {
+          "name": "10. Actualizar grupo con PUT (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Actualiza nombre y mantiene orden', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.nombre).to.eql('Grupo C Actualizado');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Grupo C Actualizado\",\n  \"orden\": {{ordenGrupo}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/{{grupoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grupos", "{{grupoId}}"]
+            }
+          }
+        },
+        {
+          "name": "11. Asignar equipos a un grupo (Happy Path - 201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 201 Created', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Retorna EquipoResumen[] de los equipos recién asignados', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.be.an('array').with.lengthOf(2);",
+                  "  pm.expect(body[0]).to.have.all.keys('id', 'nombre', 'activo');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipoIds\": [{{equipoId1}}, {{equipoId2}}]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/{{grupoId}}/equipos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grupos", "{{grupoId}}", "equipos"]
+            }
+          }
+        },
+        {
+          "name": "12. Asignar equipo duplicado en el mismo grupo (409 ALREADY_EXISTS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 409 Conflict', function () {",
+                  "  pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test('Devuelve errorCase ALREADY_EXISTS', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('ALREADY_EXISTS');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipoIds\": [{{equipoId1}}]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/{{grupoId}}/equipos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grupos", "{{grupoId}}", "equipos"]
+            }
+          }
+        },
+        {
+          "name": "13. Asignar equipo no inscrito en el torneo (400 INVALID_OPERATION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Devuelve errorCase INVALID_OPERATION', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('INVALID_OPERATION');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipoIds\": [{{equipoNoInscritoId}}]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/{{grupoId}}/equipos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grupos", "{{grupoId}}", "equipos"]
+            }
+          }
+        },
+        {
+          "name": "14. Asignar equipo ya presente en otro grupo del mismo orden (409 ALREADY_EXISTS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 409 Conflict', function () {",
+                  "  pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test('Devuelve errorCase ALREADY_EXISTS', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('ALREADY_EXISTS');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipoIds\": [{{equipoEnOtroGrupoMismoOrdenId}}]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/{{grupoId}}/equipos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grupos", "{{grupoId}}", "equipos"]
+            }
+          }
+        },
+        {
+          "name": "15. Listar equipos de un grupo (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Retorna arreglo de EquipoResumen', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.be.an('array').with.lengthOf(2);",
+                  "  pm.expect(body[0]).to.have.all.keys('id', 'nombre', 'activo');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/{{grupoId}}/equipos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grupos", "{{grupoId}}", "equipos"]
+            }
+          }
+        },
+        {
+          "name": "16. Consultar tabla de posiciones de un grupo (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Cumple contrato FilaPosicion[]', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.be.an('array').that.is.not.empty;",
+                  "  pm.expect(body[0]).to.have.all.keys('posicion', 'equipo', 'jugados', 'ganados', 'empatados', 'perdidos', 'aFavor', 'enContra', 'diferencia', 'puntos');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/{{grupoId}}/tabla-posiciones",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grupos", "{{grupoId}}", "tabla-posiciones"]
+            }
+          }
+        },
+        {
+          "name": "17. Retirar equipo de un grupo sin partidos (Happy Path - 204)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 204 No Content', function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/{{grupoId}}/equipos/{{equipoId1}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grupos", "{{grupoId}}", "equipos", "{{equipoId1}}"]
+            }
+          }
+        },
+        {
+          "name": "18. Retirar equipo que tiene partidos en el grupo (400 INVALID_OPERATION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Devuelve errorCase INVALID_OPERATION', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('INVALID_OPERATION');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/{{grupoConPartidosId}}/equipos/{{equipoConPartidosEnGrupoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grupos", "{{grupoConPartidosId}}", "equipos", "{{equipoConPartidosEnGrupoId}}"]
+            }
+          }
+        },
+        {
+          "name": "19. Eliminar grupo con partidos asociados (409 HAS_ASSOCIATIONS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 409 Conflict', function () {",
+                  "  pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test('Devuelve errorCase HAS_ASSOCIATIONS', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('HAS_ASSOCIATIONS');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/{{grupoConPartidosId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grupos", "{{grupoConPartidosId}}"]
+            }
+          }
+        },
+        {
+          "name": "20. Eliminar grupo sin partidos (Happy Path - 204)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 204 No Content', function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/{{grupoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "grupos", "{{grupoId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "HU-GC-05 - Gestionar fases finales",
+      "description": "ACUERDOS 9.16: POST/GET /api/torneos/{torneoId}/fase-final, PUT/DELETE /api/fases-finales/{id}, GET /api/fases-finales/{id}/llaves",
+      "item": [
+        {
+          "name": "1. Crear fase final (Happy Path - 201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 201 Created', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Respuesta cumple contrato FaseResponseDto (FINAL)', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.all.keys('id', 'torneo', 'nombre', 'tipo', 'orden', 'cantidadEquipos', 'tercerPuesto', 'cantidadPartidos');",
+                  "  pm.expect(body.tipo).to.eql('FINAL');",
+                  "  pm.expect(body.cantidadEquipos).to.eql(4);",
+                  "  pm.expect(body.tercerPuesto).to.eql(true);",
+                  "  pm.expect(body.cantidadPartidos).to.eql(0);",
+                  "  pm.environment.set('faseFinalId', String(body.id));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Fase final\",\n  \"orden\": 2,\n  \"cantidadEquipos\": 4,\n  \"tercerPuesto\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/fase-final",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoId}}", "fase-final"]
+            }
+          }
+        },
+        {
+          "name": "2. Crear fase final con datos inválidos (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Retorna errores de validación por campo', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('cantidadEquipos');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Fase inválida\",\n  \"orden\": 2,\n  \"cantidadEquipos\": 6\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/fase-final",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoId}}", "fase-final"]
+            }
+          }
+        },
+        {
+          "name": "3. Crear fase final de 2 equipos con tercerPuesto=true (400 INVALID_OPERATION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('errorCase es INVALID_OPERATION', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('INVALID_OPERATION');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Gran final\",\n  \"orden\": 2,\n  \"cantidadEquipos\": 2,\n  \"tercerPuesto\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoSinFaseFinalId}}/fase-final",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoSinFaseFinalId}}", "fase-final"]
+            }
+          }
+        },
+        {
+          "name": "4. Crear fase final en torneo finalizado/cancelado (400 INVALID_OPERATION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('errorCase es INVALID_OPERATION', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('INVALID_OPERATION');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Fase final cerrada\",\n  \"orden\": 2,\n  \"cantidadEquipos\": 4\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoFinalizadoId}}/fase-final",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoFinalizadoId}}", "fase-final"]
+            }
+          }
+        },
+        {
+          "name": "5. Crear fase final en torneo inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('errorCase es NOT_FOUND', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Fase final\",\n  \"orden\": 2,\n  \"cantidadEquipos\": 4\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/999999/fase-final",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "999999", "fase-final"]
+            }
+          }
+        },
+        {
+          "name": "6. Crear segunda fase final en el mismo torneo (409 ALREADY_EXISTS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 409 Conflict', function () {",
+                  "  pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test('errorCase es ALREADY_EXISTS', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('ALREADY_EXISTS');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Otra fase final\",\n  \"orden\": 3,\n  \"cantidadEquipos\": 4\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/fase-final",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoId}}", "fase-final"]
+            }
+          }
+        },
+        {
+          "name": "7. Obtener fase final del torneo (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Retorna la fase final creada', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.id).to.eql(Number(pm.environment.get('faseFinalId')));",
+                  "  pm.expect(body.tipo).to.eql('FINAL');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/fase-final",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoId}}", "fase-final"]
+            }
+          }
+        },
+        {
+          "name": "8. Obtener fase final de torneo sin fase final (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('errorCase es NOT_FOUND', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoSinFaseFinalId}}/fase-final",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoSinFaseFinalId}}", "fase-final"]
+            }
+          }
+        },
+        {
+          "name": "9. Actualizar fase final (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Actualiza nombre, orden y cantidadEquipos', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.nombre).to.eql('Fase final actualizada');",
+                  "  pm.expect(body.cantidadEquipos).to.eql(8);",
+                  "  pm.expect(body.tercerPuesto).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Fase final actualizada\",\n  \"orden\": 3,\n  \"cantidadEquipos\": 8,\n  \"tercerPuesto\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fases-finales/{{faseFinalId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases-finales", "{{faseFinalId}}"]
+            }
+          }
+        },
+        {
+          "name": "10. Actualizar cantidadEquipos en fase final con partidos (400 INVALID_OPERATION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('errorCase es INVALID_OPERATION', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('INVALID_OPERATION');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Fase final con partidos\",\n  \"orden\": 2,\n  \"cantidadEquipos\": 16,\n  \"tercerPuesto\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fases-finales/{{faseFinalConPartidosId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases-finales", "{{faseFinalConPartidosId}}"]
+            }
+          }
+        },
+        {
+          "name": "11. Actualizar fase final inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('errorCase es NOT_FOUND', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"No existe\",\n  \"orden\": 2,\n  \"cantidadEquipos\": 4\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fases-finales/999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases-finales", "999999"]
+            }
+          }
+        },
+        {
+          "name": "12. Consultar llaves de la fase final (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Respuesta cumple contrato LlavesResponseDto', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.all.keys('fase', 'cantidadEquipos', 'tercerPuesto', 'rondas');",
+                  "  pm.expect(body.fase.tipo).to.eql('FINAL');",
+                  "  pm.expect(body.rondas).to.be.an('array');",
+                  "  pm.expect(body.rondas.map((r) => r.ronda)).to.eql(['CUARTOS', 'SEMIFINAL', 'FINAL', 'TERCER_PUESTO']);",
+                  "  pm.expect(body.rondas[0].llaves).to.have.lengthOf(4);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases-finales/{{faseFinalId}}/llaves",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases-finales", "{{faseFinalId}}", "llaves"]
+            }
+          }
+        },
+        {
+          "name": "13. Consultar llaves de fase final inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('errorCase es NOT_FOUND', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases-finales/999999/llaves",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases-finales", "999999", "llaves"]
+            }
+          }
+        },
+        {
+          "name": "14. Eliminar fase final con partidos asociados (409 HAS_ASSOCIATIONS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 409 Conflict', function () {",
+                  "  pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test('errorCase es HAS_ASSOCIATIONS', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('HAS_ASSOCIATIONS');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases-finales/{{faseFinalConPartidosId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases-finales", "{{faseFinalConPartidosId}}"]
+            }
+          }
+        },
+        {
+          "name": "15. Eliminar fase final inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('errorCase es NOT_FOUND', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases-finales/999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases-finales", "999999"]
+            }
+          }
+        },
+        {
+          "name": "16. Eliminar fase final sin partidos (Happy Path - 204)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 204 No Content', function () {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases-finales/{{faseFinalId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fases-finales", "{{faseFinalId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "HU-GC-08 - Consultar desarrollo de un torneo",
+      "description": "ACUERDOS 9.17: GET /api/torneos/{torneoId}/desarrollo y consulta complementaria de anotaciones GET /api/partidos/{partidoId}/anotaciones.",
+      "item": [
+        {
+          "name": "1. Consultar desarrollo completo de un torneo (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Respuesta cumple contrato DesarrolloTorneoResponse', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.all.keys('torneo', 'resumen', 'fases');",
+                  "  pm.expect(body.torneo).to.have.all.keys('id', 'nombre', 'deporte', 'fechaInicio', 'fechaFin', 'estado', 'cantidadInscritos');",
+                  "  pm.expect(body.torneo.id).to.eql(Number(pm.environment.get('torneoId')));",
+                  "  pm.expect(body.torneo.deporte).to.have.all.keys('id', 'nombre', 'activo');",
+                  "  pm.expect(body.resumen).to.have.all.keys('totalPartidos', 'conResultado', 'pendientes');",
+                  "  pm.expect(body.resumen.conResultado + body.resumen.pendientes).to.be.at.most(body.resumen.totalPartidos);",
+                  "  pm.expect(body.fases).to.be.an('array');",
+                  "});",
+                  "pm.test('Fases respetan estructura según tipo (GRUPO vs FINAL) y orden', function () {",
+                  "  const { fases } = pm.response.json();",
+                  "  for (let i = 0; i < fases.length; i++) {",
+                  "    const fase = fases[i];",
+                  "    pm.expect(fase).to.have.all.keys('id', 'nombre', 'tipo', 'orden', 'equipos', 'tablaPosiciones', 'llaves', 'partidos');",
+                  "    if (i > 0) {",
+                  "      pm.expect(fase.orden).to.be.at.least(fases[i - 1].orden);",
+                  "    }",
+                  "    if (fase.tipo === 'GRUPO') {",
+                  "      pm.expect(fase.equipos).to.be.an('array');",
+                  "      pm.expect(fase.tablaPosiciones).to.be.an('array');",
+                  "      pm.expect(fase.llaves).to.be.null;",
+                  "    } else if (fase.tipo === 'FINAL') {",
+                  "      pm.expect(fase.equipos).to.be.null;",
+                  "      pm.expect(fase.tablaPosiciones).to.be.null;",
+                  "      pm.expect(fase.llaves).to.be.an('array');",
+                  "    }",
+                  "    pm.expect(fase.partidos).to.be.an('array');",
+                  "    if (fase.partidos.length > 0 && !pm.environment.get('partidoDesarrolloId')) {",
+                  "      pm.environment.set('partidoDesarrolloId', String(fase.partidos[0].id));",
+                  "    }",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/desarrollo",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoId}}", "desarrollo"]
+            }
+          }
+        },
+        {
+          "name": "2. Consultar desarrollo de torneo sin fases ni partidos (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Devuelve fases vacías y resumen en ceros', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.fases).to.eql([]);",
+                  "  pm.expect(body.resumen).to.eql({ totalPartidos: 0, conResultado: 0, pendientes: 0 });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoSinFasesId}}/desarrollo",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoSinFasesId}}", "desarrollo"]
+            }
+          }
+        },
+        {
+          "name": "3. Consultar anotaciones de un partido del desarrollo (ACUERDOS 9.17 - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Devuelve arreglo de anotaciones del partido', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.be.an('array');",
+                  "  if (body.length > 0) {",
+                  "    pm.expect(body[0]).to.have.all.keys('id', 'partidoId', 'jugador', 'equipo', 'minuto', 'valor', 'descripcion', 'fechaRegistro');",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/partidos/{{partidoDesarrolloId}}/anotaciones",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "partidos", "{{partidoDesarrolloId}}", "anotaciones"]
+            }
+          }
+        },
+        {
+          "name": "4. Consultar desarrollo con torneoId inválido no numérico (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/abc/desarrollo",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "abc", "desarrollo"]
+            }
+          }
+        },
+        {
+          "name": "5. Consultar desarrollo de torneo inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code es 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('errorCase es NOT_FOUND', function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.errorCase).to.eql('NOT_FOUND');",
+                  "  pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/999999/desarrollo",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "999999", "desarrollo"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
