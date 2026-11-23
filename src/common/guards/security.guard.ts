@@ -29,6 +29,9 @@ export class SecurityGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // El guard solo valida peticiones HTTP; los eventos del gateway se ignoran.
     if (context.getType() !== 'http') return true;
+    if (this.configService.get<string>('SEGURIDAD_HABILITADA', 'true') === 'false') {
+      return true;
+    }
 
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),

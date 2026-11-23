@@ -3,6 +3,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SecurityGuard } from './common/guards/security.guard';
+import { NotificacionModule } from './common/notificacion/notificacion.module';
+import { DeporteModule } from './deporte/deporte.module';
+import { EquipoModule } from './equipo/equipo.module';
+import { EscenarioModule } from './escenario/escenario.module';
+import { HabilidadModule } from './habilidad/habilidad.module';
+import { JugadorModule } from './jugador/jugador.module';
+import { PartidoModule } from './partido/partido.module';
+import { TorneoModule } from './torneo/torneo.module';
 
 @Module({
   imports: [
@@ -18,8 +26,18 @@ import { SecurityGuard } from './common/guards/security.guard';
         database: config.get<string>('DB_DATABASE', 'gestion_deportiva_db'),
         autoLoadEntities: true,
         synchronize: config.get<string>('DB_SYNCHRONIZE', 'false') === 'true',
+        dateStrings: true,
+        timezone: '-05:00',
       }),
     }),
+    NotificacionModule,
+    DeporteModule,
+    EquipoModule,
+    EscenarioModule,
+    TorneoModule,
+    JugadorModule,
+    HabilidadModule,
+    PartidoModule,
   ],
   providers: [
     {
