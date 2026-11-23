@@ -1,10 +1,9 @@
 // "import type": JugadorResumen solo se usa como TIPO (la línea desaparece al compilar).
-// TODO: ajustar la ruta cuando A suba common/dto
 import type { JugadorResumen } from '../../common/dto/jugador-resumen.dto';
 import { CrearJugadorDto } from '../dto/crear-jugador.dto';
 import { JugadorResponseDto } from '../dto/jugador-response.dto';
 import { Jugador } from '../entities/jugador.entity';
-import { aFechaHoraIso, hoyBogota } from '../utils/fechas';
+import { aFechaHoraIso, hoyBogota } from '../../common/utils/fechas';
 
 export class JugadorMapper {
   // DTO de entrada → datos de la entidad. Solo copia los 7 campos del JugadorRequest (9.7):

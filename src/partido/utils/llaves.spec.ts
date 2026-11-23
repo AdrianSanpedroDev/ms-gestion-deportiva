@@ -1,19 +1,3 @@
-// Mock virtual: RondaFinal es de C (ACUERDOS 6.11) y aún no está en main.
-jest.mock(
-  '../../fase/entities/ronda-final.enum',
-  () => ({
-    RondaFinal: {
-      DIECISEISAVOS: 'DIECISEISAVOS',
-      OCTAVOS: 'OCTAVOS',
-      CUARTOS: 'CUARTOS',
-      SEMIFINAL: 'SEMIFINAL',
-      FINAL: 'FINAL',
-      TERCER_PUESTO: 'TERCER_PUESTO',
-    },
-  }),
-  { virtual: true },
-);
-
 import { RondaFinal } from '../../fase/entities/ronda-final.enum';
 import { cantidadLlaves } from './llaves';
 

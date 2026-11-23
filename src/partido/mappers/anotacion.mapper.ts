@@ -1,12 +1,11 @@
 // "import type": Equipo, Jugador y Partido solo se usan como TIPOS de parámetros (la línea desaparece
 // al compilar): el mapper no crea ni consulta esas entidades, solo recibe objetos ya cargados.
-// TODO: Equipo es de A; compila cuando A suba equipo/entities/equipo.entity.ts
 import type { Equipo } from '../../equipo/entities/equipo.entity';
 import type { Jugador } from '../../jugador/entities/jugador.entity';
 // Se reutilizan los mappers y helpers de jugador (mismo dueño, B): no se arman los resúmenes a mano.
 import { EquipoResumenMapper } from '../../jugador/mappers/equipo-resumen.mapper';
 import { JugadorMapper } from '../../jugador/mappers/jugador.mapper';
-import { aFechaHoraIso } from '../../jugador/utils/fechas';
+import { aFechaHoraIso } from '../../common/utils/fechas';
 import { AnotacionResponseDto } from '../dto/anotacion-response.dto';
 import { CrearAnotacionDto } from '../dto/crear-anotacion.dto';
 import { Anotacion } from '../entities/anotacion.entity';

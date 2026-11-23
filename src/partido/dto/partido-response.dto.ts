@@ -1,10 +1,8 @@
 // "import type": solo se usan como TIPOS. Al compilar a JavaScript estas líneas desaparecen.
-// TODO: ajustar la ruta cuando A suba common/dto (los *Resumen de 5.6)
 import type { EquipoResumen } from '../../common/dto/equipo-resumen.dto';
 import type { EscenarioResumen } from '../../common/dto/escenario-resumen.dto';
 import type { FaseResumen } from '../../common/dto/fase-resumen.dto';
 import type { TorneoResumen } from '../../common/dto/torneo-resumen.dto';
-// TODO: RondaFinal es de C (6.11); compila cuando C suba fase/entities/ronda-final.enum.ts
 import type { RondaFinal } from '../../fase/entities/ronda-final.enum';
 import { EstadoPartido } from '../entities/estado-partido.enum';
 

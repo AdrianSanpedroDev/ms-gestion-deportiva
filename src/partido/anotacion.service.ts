@@ -1,21 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
-// TODO: ajustar la ruta cuando A suba common/errores
 import { ApplicationException } from '../common/errores/application.exception';
 import { ErrorCase } from '../common/errores/error-case.enum';
-// TODO: ajustar la ruta cuando A suba common/notificacion (NotificacionModule @Global, sección 8)
 import { CorreoService } from '../common/notificacion/correo.service';
 import { DestinatariosService } from '../common/notificacion/destinatarios.service';
 // TODO: Equipo es de A; aquí solo como TIPO (el equipo llega dentro del contrato o del partido)
 import type { Equipo } from '../equipo/entities/equipo.entity';
-// TODO: EstadoTorneo es de A (4.1); compila cuando A suba torneo/entities/estado-torneo.enum.ts
 import { EstadoTorneo } from '../torneo/entities/estado-torneo.enum';
 // Jugador y EquipoJugador son de B (jugador/): mismo dueño, se leen con su Repository<T>.
 import { EquipoJugador } from '../jugador/entities/equipo-jugador.entity';
 import { Jugador } from '../jugador/entities/jugador.entity';
 import { JugadorMapper } from '../jugador/mappers/jugador.mapper';
-import { aFechaHoraIso } from '../jugador/utils/fechas';
+import { aFechaHoraIso } from '../common/utils/fechas';
 import { ActualizarAnotacionDto } from './dto/actualizar-anotacion.dto';
 import { AnotacionResponseDto } from './dto/anotacion-response.dto';
 import { CrearAnotacionDto } from './dto/crear-anotacion.dto';

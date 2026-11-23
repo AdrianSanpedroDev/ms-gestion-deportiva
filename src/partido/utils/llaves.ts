@@ -3,7 +3,6 @@
 // (como puedeCambiarEstado): responde un número y el service decide qué hacer con él.
 // Va en utils/ y no junto a EstadoPartido porque no depende del estado del partido (criterio en
 // estado-partido.enum.ts): es un cálculo genérico sobre la ronda y la fase.
-// TODO: RondaFinal es de C (6.11); compila cuando C suba fase/entities/ronda-final.enum.ts
 import { RondaFinal } from '../../fase/entities/ronda-final.enum';
 
 // Cuántos equipos juegan cada ronda. TERCER_PUESTO lo juegan los 2 perdedores de las semifinales.

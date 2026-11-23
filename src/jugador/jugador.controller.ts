@@ -12,7 +12,6 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-// TODO: ajustar la ruta cuando A suba common/dto
 import { EstadoDto } from '../common/dto/estado.dto';
 import { ActualizarJugadorDto } from './dto/actualizar-jugador.dto';
 import { CrearJugadorDto } from './dto/crear-jugador.dto';

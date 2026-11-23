@@ -1,10 +1,3 @@
-// Mock virtual: common/notificacion es de A y aún no está en main (solo se usa como TIPO en correos.ts).
-jest.mock(
-  '../../common/notificacion/correo.service',
-  () => ({ CorreoService: class CorreoService {} }),
-  { virtual: true },
-);
-
 import type { Logger } from '@nestjs/common';
 import type { CorreoService } from '../../common/notificacion/correo.service';
 import { enviarEnSegundoPlano, escaparHtml, textoMinuto } from './correos';

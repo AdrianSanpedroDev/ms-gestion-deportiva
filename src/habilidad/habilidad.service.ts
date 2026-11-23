@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, Like, Not, Repository } from 'typeorm';
-// TODO: ajustar la ruta cuando A suba common/errores
 import { ApplicationException } from '../common/errores/application.exception';
 import { ErrorCase } from '../common/errores/error-case.enum';
-// TODO: HabilidadJugador es de C (6.7 y 6.14); compila cuando C suba habilidad-jugador/entities/habilidad-jugador.entity.ts
 import { HabilidadJugador } from '../habilidad-jugador/entities/habilidad-jugador.entity';
 // Se reutiliza el helper de jugador (mismo dueño, B): no se copia.
 import { escaparLike } from '../jugador/utils/consultas';

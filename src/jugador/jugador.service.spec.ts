@@ -1,72 +1,7 @@
-// =====================================================================================
-// TEMPORAL: quitar los jest.mock virtuales cuando A suba common/errores
-// (application.exception.ts y error-case.enum.ts). Al quitarlos, importar las clases reales.
-// =====================================================================================
-jest.mock(
-  '../common/errores/error-case.enum',
-  () => ({
-    ErrorCase: {
-      NOT_FOUND: 'NOT_FOUND',
-      ALREADY_EXISTS: 'ALREADY_EXISTS',
-      HAS_ASSOCIATIONS: 'HAS_ASSOCIATIONS',
-      INVALID_OPERATION: 'INVALID_OPERATION',
-      UNAUTHORIZED: 'UNAUTHORIZED',
-      FORBIDDEN: 'FORBIDDEN',
-      SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',
-    },
-  }),
-  { virtual: true },
-);
-jest.mock(
-  '../common/errores/application.exception',
-  () => ({
-    ApplicationException: class ApplicationException extends Error {
-      constructor(
-        public readonly errorCase: string,
-        message: string,
-      ) {
-        super(message);
-      }
-    },
-  }),
-  { virtual: true },
-);
 // La entidad EquipoJugador (GD-05) importa Equipo de A en tiempo de ejecución.
-jest.mock(
-  '../equipo/entities/equipo.entity',
-  () => ({ Equipo: class Equipo {} }),
-  { virtual: true },
-);
 
 // JugadorService cuenta HabilidadJugador (de C) y Anotacion (de B). Anotacion → Partido carga en runtime
 // Escenario, Fase y RondaFinal (de A y C), que todavía no están en main.
-jest.mock(
-  '../habilidad-jugador/entities/habilidad-jugador.entity',
-  () => ({ HabilidadJugador: class HabilidadJugador {} }),
-  { virtual: true },
-);
-jest.mock(
-  '../escenario/entities/escenario.entity',
-  () => ({ Escenario: class Escenario {} }),
-  { virtual: true },
-);
-jest.mock('../fase/entities/fase.entity', () => ({ Fase: class Fase {} }), {
-  virtual: true,
-});
-jest.mock(
-  '../fase/entities/ronda-final.enum',
-  () => ({
-    RondaFinal: {
-      DIECISEISAVOS: 'DIECISEISAVOS',
-      OCTAVOS: 'OCTAVOS',
-      CUARTOS: 'CUARTOS',
-      SEMIFINAL: 'SEMIFINAL',
-      FINAL: 'FINAL',
-      TERCER_PUESTO: 'TERCER_PUESTO',
-    },
-  }),
-  { virtual: true },
-);
 
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';

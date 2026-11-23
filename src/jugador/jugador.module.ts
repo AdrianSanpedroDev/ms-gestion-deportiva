@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-// TODO: Equipo es de A; compila cuando A suba equipo/entities/equipo.entity.ts
 import { Equipo } from '../equipo/entities/equipo.entity';
-// TODO: HabilidadJugador es de C; compila cuando C suba habilidad-jugador/entities/habilidad-jugador.entity.ts
 import { HabilidadJugador } from '../habilidad-jugador/entities/habilidad-jugador.entity';
 import { Anotacion } from '../partido/entities/anotacion.entity';
 import { EquipoJugador } from './entities/equipo-jugador.entity';

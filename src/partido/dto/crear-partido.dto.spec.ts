@@ -1,22 +1,3 @@
-// =====================================================================================
-// TEMPORAL: quitar este jest.mock virtual cuando C suba src/fase/entities/ronda-final.enum.ts.
-// Los valores salen de ACUERDOS 6.11 (rondas de la fase final) y 6.12.
-// =====================================================================================
-jest.mock(
-  '../../fase/entities/ronda-final.enum',
-  () => ({
-    RondaFinal: {
-      DIECISEISAVOS: 'DIECISEISAVOS',
-      OCTAVOS: 'OCTAVOS',
-      CUARTOS: 'CUARTOS',
-      SEMIFINAL: 'SEMIFINAL',
-      FINAL: 'FINAL',
-      TERCER_PUESTO: 'TERCER_PUESTO',
-    },
-  }),
-  { virtual: true },
-);
-
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { ActualizarPartidoDto } from './actualizar-partido.dto';
@@ -32,15 +13,15 @@ async function validar(body: object, clase = CrearPartidoDto) {
   return { dto, errores };
 }
 
-// Rondas de ACUERDOS 6.11 (las mismas del jest.mock de arriba). El DTO arma su mensaje con
-// Object.values(RondaFinal).join(', '), así que aquí se arma igual desde la misma lista.
+// Rondas según ACUERDOS (tabla de enums: TERCER_PUESTO va antes de FINAL). El DTO arma su mensaje con
+// Object.values(RondaFinal).join(', '), así que el orden del mensaje es el del enum real.
 const RONDAS = [
   'DIECISEISAVOS',
   'OCTAVOS',
   'CUARTOS',
   'SEMIFINAL',
-  'FINAL',
   'TERCER_PUESTO',
+  'FINAL',
 ];
 const MENSAJE_RONDA = `La ronda debe ser uno de estos valores: ${RONDAS.join(', ')}`;
 

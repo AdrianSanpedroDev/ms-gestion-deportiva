@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Like, Not, Repository } from 'typeorm';
-// TODO: ajustar la ruta cuando A suba common/errores
 import { ApplicationException } from '../common/errores/application.exception';
 import { ErrorCase } from '../common/errores/error-case.enum';
-// TODO: HabilidadJugador es de C (6.7 y 6.14); compila cuando C suba habilidad-jugador/entities/habilidad-jugador.entity.ts
 import { HabilidadJugador } from '../habilidad-jugador/entities/habilidad-jugador.entity';
 // Anotacion es de B (partido/, GC-07): mismo dueño, se lee aquí solo para contar.
 import { Anotacion } from '../partido/entities/anotacion.entity';
@@ -16,7 +14,7 @@ import { EquipoJugador } from './entities/equipo-jugador.entity';
 import { Jugador } from './entities/jugador.entity';
 import { JugadorMapper } from './mappers/jugador.mapper';
 import { escaparLike } from './utils/consultas';
-import { hoyBogota } from './utils/fechas';
+import { hoyBogota } from '../common/utils/fechas';
 
 @Injectable()
 export class JugadorService {

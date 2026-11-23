@@ -1,0 +1,3053 @@
+{
+  "info": {
+    "_postman_id": "b7a1d2e0-0707-4c00-9c00-0000000000b1",
+    "name": "ms-gestion-deportiva (Persona B)",
+    "description": "Pruebas de integración HTTP (Postman v2.1) de las HU de la Persona B (Adrián): GD-04 jugadores, GD-05 contratos, GD-06 habilidades, GC-06 partidos y GC-07 resultados y anotaciones. Contrato: ACUERDOS.md sección 9. Se ejecuta de arriba abajo: la carpeta 0 crea los datos y cada HU usa los ids guardados en el environment. Cada corrida usa un sufijo nuevo, así que se puede repetir. Dependencias: la carpeta 0 usa endpoints de A (deporte, equipo, torneo) y de C (grupos). Las peticiones marcadas con \"Falla hasta que A corrija...\" dependen de un error del ValidationPipe de A.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "0. Preparación (datos de A y C)",
+      "description": "Crea todo lo que necesitan las HU de B: deporte, equipos, torneo inscrito y cerrado, y un grupo con los dos equipos. Son endpoints de A y C.",
+      "item": [
+        {
+          "name": "0.1 Crear deporte (201)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Cada corrida usa un sufijo nuevo para no chocar con datos anteriores (documentos y nombres son únicos).",
+                  "pm.environment.set('sufijo', String(Date.now()).slice(-6));",
+                  "const dia = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);",
+                  "pm.environment.set('fechaCierreTorneo', dia(6));",
+                  "pm.environment.set('fechaInicioTorneo', dia(7));",
+                  "pm.environment.set('fechaFinTorneo', dia(40));",
+                  "pm.environment.set('fechaPartido', dia(10) + 'T15:00:00');",
+                  "pm.environment.set('fechaPartidoNueva', dia(11) + 'T16:00:00');",
+                  "pm.environment.set('fechaPartidoFuera', dia(100) + 'T15:00:00');",
+                  "pm.environment.set('fechaInicioContrato', dia(-30));",
+                  "pm.environment.set('fechaFinContrato', dia(365));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "pm.environment.set('deporteId', String(pm.response.json().id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/deportes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "deportes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Futbol {{sufijo}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "0.2 Crear equipo local (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "pm.environment.set('equipoLocalId', String(pm.response.json().id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "equipos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Local {{sufijo}}\",\n  \"ciudad\": \"Bogota\"\n}"
+            }
+          }
+        },
+        {
+          "name": "0.3 Crear equipo visitante (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "pm.environment.set('equipoVisitanteId', String(pm.response.json().id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "equipos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Visitante {{sufijo}}\",\n  \"ciudad\": \"Cali\"\n}"
+            }
+          }
+        },
+        {
+          "name": "0.4 Asociar deporte al equipo local (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipos/{{equipoLocalId}}/deportes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "equipos",
+                "{{equipoLocalId}}",
+                "deportes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deporteId\": {{deporteId}}\n}"
+            }
+          }
+        },
+        {
+          "name": "0.5 Asociar deporte al equipo visitante (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipos/{{equipoVisitanteId}}/deportes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "equipos",
+                "{{equipoVisitanteId}}",
+                "deportes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deporteId\": {{deporteId}}\n}"
+            }
+          }
+        },
+        {
+          "name": "0.6 Crear torneo (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "pm.environment.set('torneoId', String(pm.response.json().id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "torneos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Copa {{sufijo}}\",\n  \"deporteId\": {{deporteId}},\n  \"fechaInicio\": \"{{fechaInicioTorneo}}\",\n  \"fechaFin\": \"{{fechaFinTorneo}}\",\n  \"fechaCierreInscripciones\": \"{{fechaCierreTorneo}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "0.7 Inscribir los dos equipos (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/inscripciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "{{torneoId}}",
+                "inscripciones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipoIds\": [\n    {{equipoLocalId}},\n    {{equipoVisitanteId}}\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "0.8 Cerrar inscripciones del torneo (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "{{torneoId}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"INSCRIPCIONES_CERRADAS\"\n}"
+            }
+          }
+        },
+        {
+          "name": "0.9 (C) Crear grupo en el torneo (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "pm.environment.set('faseId', String(pm.response.json().id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/grupos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "torneos",
+                "{{torneoId}}",
+                "grupos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Grupo A\",\n  \"orden\": 1\n}"
+            },
+            "description": "Endpoint de C (GC-04). Un partido de fase de grupos necesita un grupo; su id es el faseId de los partidos."
+          }
+        },
+        {
+          "name": "0.10 (C) Asignar los dos equipos al grupo (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 o 201', function () { pm.expect([200, 201]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/grupos/{{faseId}}/equipos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "grupos",
+                "{{faseId}}",
+                "equipos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipoIds\": [\n    {{equipoLocalId}},\n    {{equipoVisitanteId}}\n  ]\n}"
+            },
+            "description": "Endpoint de C (GC-04). Los dos equipos deben estar en el grupo para poder jugar un partido de grupo."
+          }
+        }
+      ]
+    },
+    {
+      "name": "HU-GD-04 - Gestionar jugadores",
+      "description": "Contrato: ACUERDOS 9.7. Jugadores: crear, listar con filtros, obtener, actualizar, activar/desactivar y eliminar.",
+      "item": [
+        {
+          "name": "1. Crear jugador (Happy Path - 201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('Cumple el contrato: tiene id, tipoDocumento, numeroDocumento, nombres, apellidos, nombreCompleto, fechaNacimiento, edad, email, telefono, activo, fechaCreacion', function () { const b = pm.response.json(); pm.expect(b).to.have.property('id'); pm.expect(b).to.have.property('tipoDocumento'); pm.expect(b).to.have.property('numeroDocumento'); pm.expect(b).to.have.property('nombres'); pm.expect(b).to.have.property('apellidos'); pm.expect(b).to.have.property('nombreCompleto'); pm.expect(b).to.have.property('fechaNacimiento'); pm.expect(b).to.have.property('edad'); pm.expect(b).to.have.property('email'); pm.expect(b).to.have.property('telefono'); pm.expect(b).to.have.property('activo'); pm.expect(b).to.have.property('fechaCreacion'); });",
+                  "pm.test('nombreCompleto y activo', function () { const b = pm.response.json(); pm.expect(b.nombreCompleto).to.eql('Ana Perez'); pm.expect(b.activo).to.eql(true); });",
+                  "pm.environment.set('jugadorId', String(pm.response.json().id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoDocumento\": \"CC\",\n  \"numeroDocumento\": \"T{{sufijo}}1\",\n  \"nombres\": \"Ana\",\n  \"apellidos\": \"Perez\",\n  \"fechaNacimiento\": \"2000-05-10\"\n}"
+            }
+          }
+        },
+        {
+          "name": "2. Crear segundo jugador con email (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "pm.environment.set('jugador2Id', String(pm.response.json().id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoDocumento\": \"CC\",\n  \"numeroDocumento\": \"T{{sufijo}}2\",\n  \"nombres\": \"Luis\",\n  \"apellidos\": \"Gomez\",\n  \"fechaNacimiento\": \"1999-03-01\",\n  \"email\": \"luis@example.com\"\n}"
+            }
+          }
+        },
+        {
+          "name": "3. Documento repetido (409 ALREADY_EXISTS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('errorCase ALREADY_EXISTS', function () { pm.expect(pm.response.json().errorCase).to.eql('ALREADY_EXISTS'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoDocumento\": \"CC\",\n  \"numeroDocumento\": \"T{{sufijo}}1\",\n  \"nombres\": \"X\",\n  \"apellidos\": \"Y\",\n  \"fechaNacimiento\": \"2000-01-01\"\n}"
+            }
+          }
+        },
+        {
+          "name": "4. Fecha de nacimiento en el futuro (400 INVALID_OPERATION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('errorCase INVALID_OPERATION', function () { pm.expect(pm.response.json().errorCase).to.eql('INVALID_OPERATION'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoDocumento\": \"CC\",\n  \"numeroDocumento\": \"T{{sufijo}}9\",\n  \"nombres\": \"X\",\n  \"apellidos\": \"Y\",\n  \"fechaNacimiento\": \"2999-01-01\"\n}"
+            }
+          }
+        },
+        {
+          "name": "5. Body vacío (400 con { campo: mensaje })",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "description": "Falla hasta que A corrija el exceptionFactory de main.ts y el HttpExceptionFilter: hoy la validación del ValidationPipe responde 500 en vez de 400 + { campo: mensaje } (ACUERDOS 5.2)."
+          }
+        },
+        {
+          "name": "6. Listar jugadores (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Es un arreglo con al menos 2', function () { const b = pm.response.json(); pm.expect(b).to.be.an('array'); pm.expect(b.length).to.be.at.least(2); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores"
+              ]
+            }
+          }
+        },
+        {
+          "name": "7. Buscar por nombre (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Todos coinciden con Ana', function () { const b = pm.response.json(); pm.expect(b.length).to.be.at.least(1); b.forEach(function (j) { pm.expect((j.nombres + ' ' + j.apellidos).toLowerCase()).to.include('ana'); }); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores?busqueda=Ana",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores"
+              ],
+              "query": [
+                {
+                  "key": "busqueda",
+                  "value": "Ana"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "8. Filtrar por activos (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Todos activos', function () { pm.response.json().forEach(function (j) { pm.expect(j.activo).to.eql(true); }); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores?activo=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores"
+              ],
+              "query": [
+                {
+                  "key": "activo",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "9. Obtener jugador (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Cumple el contrato: tiene id, edad, nombreCompleto', function () { const b = pm.response.json(); pm.expect(b).to.have.property('id'); pm.expect(b).to.have.property('edad'); pm.expect(b).to.have.property('nombreCompleto'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores",
+                "{{jugadorId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "10. Obtener jugador inexistente (404 NOT_FOUND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', function () { pm.response.to.have.status(404); });",
+                  "pm.test('errorCase NOT_FOUND', function () { pm.expect(pm.response.json().errorCase).to.eql('NOT_FOUND'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores",
+                "999999"
+              ]
+            }
+          }
+        },
+        {
+          "name": "11. Actualizar jugador (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Cambió el nombre y el teléfono', function () { const b = pm.response.json(); pm.expect(b.nombres).to.eql('Ana Maria'); pm.expect(b.telefono).to.eql('3001234567'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores",
+                "{{jugadorId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoDocumento\": \"CC\",\n  \"numeroDocumento\": \"T{{sufijo}}1\",\n  \"nombres\": \"Ana Maria\",\n  \"apellidos\": \"Perez\",\n  \"fechaNacimiento\": \"2000-05-10\",\n  \"telefono\": \"3001234567\"\n}"
+            }
+          }
+        },
+        {
+          "name": "12. Desactivar jugador (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('activo=false', function () { pm.expect(pm.response.json().activo).to.eql(false); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugador2Id}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores",
+                "{{jugador2Id}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}"
+            }
+          }
+        },
+        {
+          "name": "13. Reactivar jugador (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('activo=true', function () { pm.expect(pm.response.json().activo).to.eql(true); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugador2Id}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores",
+                "{{jugador2Id}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "14. Crear jugador temporal (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "pm.environment.set('jugadorTmpId', String(pm.response.json().id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoDocumento\": \"TI\",\n  \"numeroDocumento\": \"T{{sufijo}}3\",\n  \"nombres\": \"Temporal\",\n  \"apellidos\": \"Borrar\",\n  \"fechaNacimiento\": \"2005-01-01\"\n}"
+            }
+          }
+        },
+        {
+          "name": "15. Eliminar jugador sin asociaciones (204)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorTmpId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores",
+                "{{jugadorTmpId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "16. Eliminar jugador ya eliminado (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', function () { pm.response.to.have.status(404); });",
+                  "pm.test('errorCase NOT_FOUND', function () { pm.expect(pm.response.json().errorCase).to.eql('NOT_FOUND'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorTmpId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores",
+                "{{jugadorTmpId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "HU-GD-05 - Contratos equipo-jugador",
+      "description": "Contrato: ACUERDOS 9.8. El retiro de contrato se prueba al final de la colección, para que no afecte a las anotaciones.",
+      "item": [
+        {
+          "name": "1. (Precondición) Desactivar jugador 2 (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugador2Id}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores",
+                "{{jugador2Id}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}"
+            }
+          }
+        },
+        {
+          "name": "2. Contrato con jugador inactivo (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('errorCase INVALID_OPERATION', function () { pm.expect(pm.response.json().errorCase).to.eql('INVALID_OPERATION'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipos/{{equipoVisitanteId}}/jugadores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "equipos",
+                "{{equipoVisitanteId}}",
+                "jugadores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jugadorId\": {{jugador2Id}},\n  \"fechaInicio\": \"{{fechaInicioContrato}}\",\n  \"fechaFin\": \"{{fechaFinContrato}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "3. (Precondición) Reactivar jugador 2 (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugador2Id}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores",
+                "{{jugador2Id}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "4. Asignar jugador 1 al equipo local (Happy Path - 201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('Cumple el contrato: tiene id, jugador, equipo, fechaInicio, fechaFin, fechaRetiro, activo', function () { const b = pm.response.json(); pm.expect(b).to.have.property('id'); pm.expect(b).to.have.property('jugador'); pm.expect(b).to.have.property('equipo'); pm.expect(b).to.have.property('fechaInicio'); pm.expect(b).to.have.property('fechaFin'); pm.expect(b).to.have.property('fechaRetiro'); pm.expect(b).to.have.property('activo'); });",
+                  "pm.test('Contrato activo y sin retiro', function () { const b = pm.response.json(); pm.expect(b.activo).to.eql(true); pm.expect(b.fechaRetiro).to.eql(null); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipos/{{equipoLocalId}}/jugadores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "equipos",
+                "{{equipoLocalId}}",
+                "jugadores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jugadorId\": {{jugadorId}},\n  \"fechaInicio\": \"{{fechaInicioContrato}}\",\n  \"fechaFin\": \"{{fechaFinContrato}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "5. Asignar jugador 2 al equipo visitante (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipos/{{equipoVisitanteId}}/jugadores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "equipos",
+                "{{equipoVisitanteId}}",
+                "jugadores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jugadorId\": {{jugador2Id}},\n  \"fechaInicio\": \"{{fechaInicioContrato}}\",\n  \"fechaFin\": \"{{fechaFinContrato}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "6. Contrato activo repetido con el mismo equipo (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('errorCase ALREADY_EXISTS', function () { pm.expect(pm.response.json().errorCase).to.eql('ALREADY_EXISTS'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipos/{{equipoLocalId}}/jugadores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "equipos",
+                "{{equipoLocalId}}",
+                "jugadores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jugadorId\": {{jugadorId}},\n  \"fechaInicio\": \"{{fechaInicioContrato}}\",\n  \"fechaFin\": \"{{fechaFinContrato}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "7. fechaFin igual a fechaInicio (400 INVALID_OPERATION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('errorCase INVALID_OPERATION', function () { pm.expect(pm.response.json().errorCase).to.eql('INVALID_OPERATION'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipos/{{equipoLocalId}}/jugadores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "equipos",
+                "{{equipoLocalId}}",
+                "jugadores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jugadorId\": {{jugador2Id}},\n  \"fechaInicio\": \"{{fechaInicioContrato}}\",\n  \"fechaFin\": \"{{fechaInicioContrato}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "8. Equipo inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', function () { pm.response.to.have.status(404); });",
+                  "pm.test('errorCase NOT_FOUND', function () { pm.expect(pm.response.json().errorCase).to.eql('NOT_FOUND'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipos/999999/jugadores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "equipos",
+                "999999",
+                "jugadores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jugadorId\": {{jugadorId}},\n  \"fechaInicio\": \"{{fechaInicioContrato}}\",\n  \"fechaFin\": \"{{fechaFinContrato}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "9. Jugador inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', function () { pm.response.to.have.status(404); });",
+                  "pm.test('errorCase NOT_FOUND', function () { pm.expect(pm.response.json().errorCase).to.eql('NOT_FOUND'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipos/{{equipoLocalId}}/jugadores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "equipos",
+                "{{equipoLocalId}}",
+                "jugadores"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jugadorId\": 999999,\n  \"fechaInicio\": \"{{fechaInicioContrato}}\",\n  \"fechaFin\": \"{{fechaFinContrato}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "10. Plantilla del equipo (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Incluye al jugador 1', function () { const ids = pm.response.json().map(function (c) { return c.jugador.id; }); pm.expect(ids).to.include(Number(pm.environment.get('jugadorId'))); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipos/{{equipoLocalId}}/jugadores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "equipos",
+                "{{equipoLocalId}}",
+                "jugadores"
+              ]
+            }
+          }
+        },
+        {
+          "name": "11. Plantilla con historial (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipos/{{equipoLocalId}}/jugadores?incluirHistorial=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "equipos",
+                "{{equipoLocalId}}",
+                "jugadores"
+              ],
+              "query": [
+                {
+                  "key": "incluirHistorial",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "12. Equipos de un jugador (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Es un arreglo con contratos', function () { pm.expect(pm.response.json().length).to.be.at.least(1); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}/equipos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores",
+                "{{jugadorId}}",
+                "equipos"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "HU-GD-06 - Gestionar habilidades (solo Postman)",
+      "description": "Contrato: ACUERDOS 9.9. El 409 por \"habilidad asignada a jugadores\" se prueba con la colección de C (GD-07), que es la que las asigna.",
+      "item": [
+        {
+          "name": "1. Crear habilidad (Happy Path - 201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('Cumple el contrato: tiene id, nombre, descripcion, categoria, fechaCreacion', function () { const b = pm.response.json(); pm.expect(b).to.have.property('id'); pm.expect(b).to.have.property('nombre'); pm.expect(b).to.have.property('descripcion'); pm.expect(b).to.have.property('categoria'); pm.expect(b).to.have.property('fechaCreacion'); });",
+                  "pm.environment.set('habilidadId', String(pm.response.json().id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/habilidades",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habilidades"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Regate {{sufijo}}\",\n  \"categoria\": \"TECNICA\"\n}"
+            }
+          }
+        },
+        {
+          "name": "2. Nombre repetido (409 ALREADY_EXISTS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('errorCase ALREADY_EXISTS', function () { pm.expect(pm.response.json().errorCase).to.eql('ALREADY_EXISTS'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/habilidades",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habilidades"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Regate {{sufijo}}\",\n  \"categoria\": \"TECNICA\"\n}"
+            }
+          }
+        },
+        {
+          "name": "3. Categoría inválida (400 con { campo: mensaje })",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/habilidades",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habilidades"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Otra {{sufijo}}\",\n  \"categoria\": \"NADA\"\n}"
+            },
+            "description": "Falla hasta que A corrija el exceptionFactory de main.ts y el HttpExceptionFilter: hoy la validación del ValidationPipe responde 500 en vez de 400 + { campo: mensaje } (ACUERDOS 5.2)."
+          }
+        },
+        {
+          "name": "4. Listar habilidades (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/habilidades",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habilidades"
+              ]
+            }
+          }
+        },
+        {
+          "name": "5. Filtrar por categoría (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Todas TECNICA', function () { pm.response.json().forEach(function (h) { pm.expect(h.categoria).to.eql('TECNICA'); }); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/habilidades?categoria=TECNICA",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habilidades"
+              ],
+              "query": [
+                {
+                  "key": "categoria",
+                  "value": "TECNICA"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "6. Obtener habilidad (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Cumple el contrato: tiene id, nombre, categoria', function () { const b = pm.response.json(); pm.expect(b).to.have.property('id'); pm.expect(b).to.have.property('nombre'); pm.expect(b).to.have.property('categoria'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/habilidades/{{habilidadId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habilidades",
+                "{{habilidadId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "7. Obtener inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', function () { pm.response.to.have.status(404); });",
+                  "pm.test('errorCase NOT_FOUND', function () { pm.expect(pm.response.json().errorCase).to.eql('NOT_FOUND'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/habilidades/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habilidades",
+                "999999"
+              ]
+            }
+          }
+        },
+        {
+          "name": "8. Actualizar habilidad (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Cambió la descripción', function () { pm.expect(pm.response.json().descripcion).to.eql('Gambeta'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/habilidades/{{habilidadId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habilidades",
+                "{{habilidadId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Regate {{sufijo}}\",\n  \"categoria\": \"TECNICA\",\n  \"descripcion\": \"Gambeta\"\n}"
+            }
+          }
+        },
+        {
+          "name": "9. Eliminar habilidad sin jugadores (204)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/habilidades/{{habilidadId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habilidades",
+                "{{habilidadId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "10. Obtener habilidad eliminada (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', function () { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/habilidades/{{habilidadId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habilidades",
+                "{{habilidadId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "HU-GC-06 - Gestionar partidos",
+      "description": "Contrato: ACUERDOS 9.10 y reglas 6.12. Necesita un grupo con los dos equipos (carpeta 0).",
+      "item": [
+        {
+          "name": "1. Mismo equipo como local y visitante (400 INVALID_OPERATION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('errorCase INVALID_OPERATION', function () { pm.expect(pm.response.json().errorCase).to.eql('INVALID_OPERATION'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/{{faseId}}/partidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fases",
+                "{{faseId}}",
+                "partidos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipoLocalId\": {{equipoLocalId}},\n  \"equipoVisitanteId\": {{equipoLocalId}},\n  \"fechaHora\": \"{{fechaPartido}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "2. Fecha fuera del rango del torneo (400 INVALID_OPERATION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('errorCase INVALID_OPERATION', function () { pm.expect(pm.response.json().errorCase).to.eql('INVALID_OPERATION'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/{{faseId}}/partidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fases",
+                "{{faseId}}",
+                "partidos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipoLocalId\": {{equipoLocalId}},\n  \"equipoVisitanteId\": {{equipoVisitanteId}},\n  \"fechaHora\": \"{{fechaPartidoFuera}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "3. Formato de fecha inválido (400 con { campo: mensaje })",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/{{faseId}}/partidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fases",
+                "{{faseId}}",
+                "partidos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipoLocalId\": {{equipoLocalId}},\n  \"equipoVisitanteId\": {{equipoVisitanteId}},\n  \"fechaHora\": \"05/12/2026\"\n}"
+            },
+            "description": "Falla hasta que A corrija el exceptionFactory de main.ts y el HttpExceptionFilter: hoy la validación del ValidationPipe responde 500 en vez de 400 + { campo: mensaje } (ACUERDOS 5.2)."
+          }
+        },
+        {
+          "name": "4. Fase inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', function () { pm.response.to.have.status(404); });",
+                  "pm.test('errorCase NOT_FOUND', function () { pm.expect(pm.response.json().errorCase).to.eql('NOT_FOUND'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/999999/partidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fases",
+                "999999",
+                "partidos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipoLocalId\": {{equipoLocalId}},\n  \"equipoVisitanteId\": {{equipoVisitanteId}},\n  \"fechaHora\": \"{{fechaPartido}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "5. Equipo inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', function () { pm.response.to.have.status(404); });",
+                  "pm.test('errorCase NOT_FOUND', function () { pm.expect(pm.response.json().errorCase).to.eql('NOT_FOUND'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/{{faseId}}/partidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fases",
+                "{{faseId}}",
+                "partidos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipoLocalId\": 999999,\n  \"equipoVisitanteId\": {{equipoVisitanteId}},\n  \"fechaHora\": \"{{fechaPartido}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "6. Crear partido (Happy Path - 201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('Cumple el contrato: tiene id, torneo, fase, equipoLocal, equipoVisitante, fechaHora, escenario, ronda, numeroLlave, estado, marcadorLocal, marcadorVisitante, tieneResultado, cantidadAnotaciones', function () { const b = pm.response.json(); pm.expect(b).to.have.property('id'); pm.expect(b).to.have.property('torneo'); pm.expect(b).to.have.property('fase'); pm.expect(b).to.have.property('equipoLocal'); pm.expect(b).to.have.property('equipoVisitante'); pm.expect(b).to.have.property('fechaHora'); pm.expect(b).to.have.property('escenario'); pm.expect(b).to.have.property('ronda'); pm.expect(b).to.have.property('numeroLlave'); pm.expect(b).to.have.property('estado'); pm.expect(b).to.have.property('marcadorLocal'); pm.expect(b).to.have.property('marcadorVisitante'); pm.expect(b).to.have.property('tieneResultado'); pm.expect(b).to.have.property('cantidadAnotaciones'); });",
+                  "pm.test('Nace PROGRAMADO y sin resultado', function () { const b = pm.response.json(); pm.expect(b.estado).to.eql('PROGRAMADO'); pm.expect(b.tieneResultado).to.eql(false); pm.expect(b.cantidadAnotaciones).to.eql(0); pm.expect(b.ronda).to.eql(null); });",
+                  "pm.test('fechaHora con formato yyyy-MM-ddTHH:mm:ss', function () { pm.expect(pm.response.json().fechaHora).to.match(/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$/); });",
+                  "pm.environment.set('partidoId', String(pm.response.json().id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/{{faseId}}/partidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fases",
+                "{{faseId}}",
+                "partidos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipoLocalId\": {{equipoLocalId}},\n  \"equipoVisitanteId\": {{equipoVisitanteId}},\n  \"fechaHora\": \"{{fechaPartido}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "7. Listar partidos (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Hay al menos un partido', function () { pm.expect(pm.response.json().length).to.be.at.least(1); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/partidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "partidos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "8. Filtrar partidos por torneo (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Todos del torneo', function () { pm.response.json().forEach(function (p) { pm.expect(String(p.torneo.id)).to.eql(pm.environment.get('torneoId')); }); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/partidos?torneoId={{torneoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "partidos"
+              ],
+              "query": [
+                {
+                  "key": "torneoId",
+                  "value": "{{torneoId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "9. Partidos de la fase filtrados por estado (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fases/{{faseId}}/partidos?estado=PROGRAMADO",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fases",
+                "{{faseId}}",
+                "partidos"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "PROGRAMADO"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "10. Obtener partido (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Cumple el contrato: tiene id, estado, equipoLocal, equipoVisitante', function () { const b = pm.response.json(); pm.expect(b).to.have.property('id'); pm.expect(b).to.have.property('estado'); pm.expect(b).to.have.property('equipoLocal'); pm.expect(b).to.have.property('equipoVisitante'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/partidos/{{partidoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "partidos",
+                "{{partidoId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "11. Obtener partido inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', function () { pm.response.to.have.status(404); });",
+                  "pm.test('errorCase NOT_FOUND', function () { pm.expect(pm.response.json().errorCase).to.eql('NOT_FOUND'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/partidos/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "partidos",
+                "999999"
+              ]
+            }
+          }
+        },
+        {
+          "name": "12. Editar partido PROGRAMADO (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Cambió la fecha', function () { pm.expect(pm.response.json().fechaHora).to.eql(pm.environment.get('fechaPartidoNueva')); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/partidos/{{partidoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "partidos",
+                "{{partidoId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipoLocalId\": {{equipoLocalId}},\n  \"equipoVisitanteId\": {{equipoVisitanteId}},\n  \"fechaHora\": \"{{fechaPartidoNueva}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "HU-GC-07 - Resultados y anotaciones",
+      "description": "Contrato: ACUERDOS 9.11. El partido pasa PROGRAMADO -> EN_JUEGO -> FINALIZADO; el resultado y las anotaciones solo se aceptan en EN_JUEGO o FINALIZADO.",
+      "item": [
+        {
+          "name": "1. Resultado con el partido PROGRAMADO (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('errorCase INVALID_OPERATION', function () { pm.expect(pm.response.json().errorCase).to.eql('INVALID_OPERATION'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/partidos/{{partidoId}}/resultado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "partidos",
+                "{{partidoId}}",
+                "resultado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"marcadorLocal\": 1,\n  \"marcadorVisitante\": 0\n}"
+            }
+          }
+        },
+        {
+          "name": "2. Anotación con el partido PROGRAMADO (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('errorCase INVALID_OPERATION', function () { pm.expect(pm.response.json().errorCase).to.eql('INVALID_OPERATION'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/partidos/{{partidoId}}/anotaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "partidos",
+                "{{partidoId}}",
+                "anotaciones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jugadorId\": {{jugadorId}},\n  \"minuto\": 10\n}"
+            }
+          }
+        },
+        {
+          "name": "3. Finalizar sin resultado (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('errorCase INVALID_OPERATION', function () { pm.expect(pm.response.json().errorCase).to.eql('INVALID_OPERATION'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/partidos/{{partidoId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "partidos",
+                "{{partidoId}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"FINALIZADO\"\n}"
+            }
+          }
+        },
+        {
+          "name": "4. Pasar a EN_JUEGO (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('estado EN_JUEGO', function () { pm.expect(pm.response.json().estado).to.eql('EN_JUEGO'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/partidos/{{partidoId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "partidos",
+                "{{partidoId}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"EN_JUEGO\"\n}"
+            }
+          }
+        },
+        {
+          "name": "5. Marcador negativo (400 con { campo: mensaje })",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/partidos/{{partidoId}}/resultado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "partidos",
+                "{{partidoId}}",
+                "resultado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"marcadorLocal\": -1,\n  \"marcadorVisitante\": 0\n}"
+            },
+            "description": "Falla hasta que A corrija el exceptionFactory de main.ts y el HttpExceptionFilter: hoy la validación del ValidationPipe responde 500 en vez de 400 + { campo: mensaje } (ACUERDOS 5.2)."
+          }
+        },
+        {
+          "name": "6. Registrar resultado (Happy Path - 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Marcador y tieneResultado', function () { const b = pm.response.json(); pm.expect(b.marcadorLocal).to.eql(2); pm.expect(b.marcadorVisitante).to.eql(1); pm.expect(b.tieneResultado).to.eql(true); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/partidos/{{partidoId}}/resultado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "partidos",
+                "{{partidoId}}",
+                "resultado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"marcadorLocal\": 2,\n  \"marcadorVisitante\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "7. Registrar anotación del equipo local (Happy Path - 201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('Cumple el contrato: tiene id, partidoId, jugador, equipo, minuto, valor, descripcion, fechaRegistro', function () { const b = pm.response.json(); pm.expect(b).to.have.property('id'); pm.expect(b).to.have.property('partidoId'); pm.expect(b).to.have.property('jugador'); pm.expect(b).to.have.property('equipo'); pm.expect(b).to.have.property('minuto'); pm.expect(b).to.have.property('valor'); pm.expect(b).to.have.property('descripcion'); pm.expect(b).to.have.property('fechaRegistro'); });",
+                  "pm.test('El equipo se deduce del contrato (local) y valor por defecto 1', function () { const b = pm.response.json(); pm.expect(String(b.equipo.id)).to.eql(pm.environment.get('equipoLocalId')); pm.expect(b.valor).to.eql(1); });",
+                  "pm.environment.set('anotacionId', String(pm.response.json().id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/partidos/{{partidoId}}/anotaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "partidos",
+                "{{partidoId}}",
+                "anotaciones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jugadorId\": {{jugadorId}},\n  \"minuto\": 10,\n  \"descripcion\": \"Gol de cabeza\"\n}"
+            }
+          }
+        },
+        {
+          "name": "8. Registrar anotación del equipo visitante (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('El equipo es el visitante', function () { pm.expect(String(pm.response.json().equipo.id)).to.eql(pm.environment.get('equipoVisitanteId')); });",
+                  "pm.environment.set('anotacion2Id', String(pm.response.json().id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/partidos/{{partidoId}}/anotaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "partidos",
+                "{{partidoId}}",
+                "anotaciones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jugadorId\": {{jugador2Id}},\n  \"minuto\": 55\n}"
+            }
+          }
+        },
+        {
+          "name": "9. Anotación de jugador inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', function () { pm.response.to.have.status(404); });",
+                  "pm.test('errorCase NOT_FOUND', function () { pm.expect(pm.response.json().errorCase).to.eql('NOT_FOUND'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/partidos/{{partidoId}}/anotaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "partidos",
+                "{{partidoId}}",
+                "anotaciones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jugadorId\": 999999,\n  \"minuto\": 5\n}"
+            }
+          }
+        },
+        {
+          "name": "10. Listar anotaciones ordenadas por minuto (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Hay 2 y van por minuto', function () { const b = pm.response.json(); pm.expect(b.length).to.eql(2); pm.expect(b[0].minuto).to.be.at.most(b[1].minuto); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/partidos/{{partidoId}}/anotaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "partidos",
+                "{{partidoId}}",
+                "anotaciones"
+              ]
+            }
+          }
+        },
+        {
+          "name": "11. Editar anotación (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Cambió el minuto', function () { pm.expect(pm.response.json().minuto).to.eql(12); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/anotaciones/{{anotacionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anotaciones",
+                "{{anotacionId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jugadorId\": {{jugadorId}},\n  \"minuto\": 12,\n  \"descripcion\": \"Gol corregido\"\n}"
+            }
+          }
+        },
+        {
+          "name": "12. Editar partido EN_JUEGO (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('errorCase INVALID_OPERATION', function () { pm.expect(pm.response.json().errorCase).to.eql('INVALID_OPERATION'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/partidos/{{partidoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "partidos",
+                "{{partidoId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipoLocalId\": {{equipoLocalId}},\n  \"equipoVisitanteId\": {{equipoVisitanteId}},\n  \"fechaHora\": \"{{fechaPartidoNueva}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "13. Finalizar partido (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('estado FINALIZADO', function () { pm.expect(pm.response.json().estado).to.eql('FINALIZADO'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/partidos/{{partidoId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "partidos",
+                "{{partidoId}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"FINALIZADO\"\n}"
+            }
+          }
+        },
+        {
+          "name": "14. Volver a PROGRAMADO (400 transición inválida)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('errorCase INVALID_OPERATION', function () { pm.expect(pm.response.json().errorCase).to.eql('INVALID_OPERATION'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/partidos/{{partidoId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "partidos",
+                "{{partidoId}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"PROGRAMADO\"\n}"
+            }
+          }
+        },
+        {
+          "name": "15. Eliminar partido con anotaciones (400/409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400 o 409', function () { pm.expect([400, 409]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/partidos/{{partidoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "partidos",
+                "{{partidoId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "16. Eliminar una anotación (204)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/anotaciones/{{anotacion2Id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anotaciones",
+                "{{anotacion2Id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "17. Eliminar anotación ya eliminada (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', function () { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/anotaciones/{{anotacion2Id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anotaciones",
+                "{{anotacion2Id}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cierre - chequeos de eliminar y retiro",
+      "description": "Cierra el recorrido: las reglas de eliminar y el retiro de un contrato.",
+      "item": [
+        {
+          "name": "1. Eliminar jugador con anotaciones (409 HAS_ASSOCIATIONS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('errorCase HAS_ASSOCIATIONS', function () { pm.expect(pm.response.json().errorCase).to.eql('HAS_ASSOCIATIONS'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores",
+                "{{jugadorId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "2. Eliminar jugador con contratos (409 HAS_ASSOCIATIONS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('errorCase HAS_ASSOCIATIONS', function () { pm.expect(pm.response.json().errorCase).to.eql('HAS_ASSOCIATIONS'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugador2Id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores",
+                "{{jugador2Id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3. Retirar contrato del jugador 2 (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Contrato retirado', function () { const b = pm.response.json(); pm.expect(b.activo).to.eql(false); pm.expect(b.fechaRetiro).to.not.eql(null); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipos/{{equipoVisitanteId}}/jugadores/{{jugador2Id}}/retiro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "equipos",
+                "{{equipoVisitanteId}}",
+                "jugadores",
+                "{{jugador2Id}}",
+                "retiro"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "4. Retirar de nuevo (404, ya no hay contrato activo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', function () { pm.response.to.have.status(404); });",
+                  "pm.test('errorCase NOT_FOUND', function () { pm.expect(pm.response.json().errorCase).to.eql('NOT_FOUND'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipos/{{equipoVisitanteId}}/jugadores/{{jugador2Id}}/retiro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "equipos",
+                "{{equipoVisitanteId}}",
+                "jugadores",
+                "{{jugador2Id}}",
+                "retiro"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

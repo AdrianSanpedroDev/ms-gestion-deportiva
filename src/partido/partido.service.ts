@@ -6,25 +6,21 @@ import {
   Not,
   Repository,
 } from 'typeorm';
-// TODO: ajustar la ruta cuando A suba common/errores
 import { ApplicationException } from '../common/errores/application.exception';
 import { ErrorCase } from '../common/errores/error-case.enum';
-// TODO: ajustar la ruta cuando A suba common/notificacion (NotificacionModule @Global, sección 8)
 import { CorreoService } from '../common/notificacion/correo.service';
 import { DestinatariosService } from '../common/notificacion/destinatarios.service';
 // Entidades AJENAS, solo lectura (ACUERDOS 7): findOne*, existsBy. Nunca save/remove ni su Service.
-// TODO: Equipo, Escenario, Inscripcion, Torneo y EstadoTorneo son de A; compilan cuando A los suba
 import { Equipo } from '../equipo/entities/equipo.entity';
 import { Escenario } from '../escenario/entities/escenario.entity';
 import { EstadoTorneo } from '../torneo/entities/estado-torneo.enum';
 import { Inscripcion } from '../torneo/entities/inscripcion.entity';
 import type { Torneo } from '../torneo/entities/torneo.entity';
-// TODO: Fase, Grupo, FaseFinal, GrupoEquipo y RondaFinal son de C; compilan cuando C los suba
 import { Fase, FaseFinal, Grupo } from '../fase/entities/fase.entity';
 import { GrupoEquipo } from '../fase/entities/grupo-equipo.entity';
 import type { RondaFinal } from '../fase/entities/ronda-final.enum';
 import { JugadorMapper } from '../jugador/mappers/jugador.mapper';
-import { aFechaHoraIso } from '../jugador/utils/fechas';
+import { aFechaHoraIso } from '../common/utils/fechas';
 import { ActualizarPartidoDto } from './dto/actualizar-partido.dto';
 import { CrearPartidoDto } from './dto/crear-partido.dto';
 import { FiltrosPartidoFaseDto } from './dto/filtros-partido-fase.dto';

@@ -1,10 +1,4 @@
-// TEMPORAL: quitar el mock virtual cuando A suba equipo/entities/equipo.entity.ts
 // (la entidad EquipoJugador importa Equipo en tiempo de ejecución).
-jest.mock(
-  '../../equipo/entities/equipo.entity',
-  () => ({ Equipo: class Equipo {} }),
-  { virtual: true },
-);
 
 import type { Equipo } from '../../equipo/entities/equipo.entity';
 import { EquipoJugador } from '../entities/equipo-jugador.entity';

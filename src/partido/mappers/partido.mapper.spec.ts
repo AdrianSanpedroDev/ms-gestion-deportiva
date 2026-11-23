@@ -1,35 +1,3 @@
-// Mocks virtuales: entidades de A y C que aún no están en main.
-jest.mock(
-  '../../equipo/entities/equipo.entity',
-  () => ({ Equipo: class Equipo {} }),
-  { virtual: true },
-);
-jest.mock(
-  '../../escenario/entities/escenario.entity',
-  () => ({ Escenario: class Escenario {} }),
-  { virtual: true },
-);
-jest.mock(
-  '../../fase/entities/fase.entity',
-  () => {
-    class Fase {}
-    class Grupo extends Fase {}
-    class FaseFinal extends Fase {}
-    return { Fase, Grupo, FaseFinal };
-  },
-  { virtual: true },
-);
-jest.mock(
-  '../../fase/entities/tipo-fase.enum',
-  () => ({ TipoFase: { GRUPO: 'GRUPO', FINAL: 'FINAL' } }),
-  { virtual: true },
-);
-jest.mock(
-  '../../fase/entities/ronda-final.enum',
-  () => ({ RondaFinal: { FINAL: 'FINAL', CUARTOS: 'CUARTOS' } }),
-  { virtual: true },
-);
-
 import { FaseFinal, Grupo } from '../../fase/entities/fase.entity';
 import { EstadoPartido } from '../entities/estado-partido.enum';
 import { Partido } from '../entities/partido.entity';

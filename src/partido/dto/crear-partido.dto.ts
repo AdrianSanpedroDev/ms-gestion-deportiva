@@ -8,7 +8,6 @@ import {
   Matches,
   Min,
 } from 'class-validator';
-// TODO: RondaFinal es de C (6.11); compila cuando C suba fase/entities/ronda-final.enum.ts
 import { RondaFinal } from '../../fase/entities/ronda-final.enum';
 // Se reutilizan los transformadores de jugador (mismo dueño, B): no se copian.
 import { recortar, recortarOpcional } from '../../jugador/dto/transformadores';

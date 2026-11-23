@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, Repository } from 'typeorm';
-// TODO: ajustar la ruta cuando A suba common/errores
 import { ApplicationException } from '../common/errores/application.exception';
 import { ErrorCase } from '../common/errores/error-case.enum';
-// TODO: Equipo es de A (6.2); compila cuando A suba equipo/entities/equipo.entity.ts
 import { Equipo } from '../equipo/entities/equipo.entity';
 import { ContratoResponseDto } from './dto/contrato-response.dto';
 import { CrearContratoDto } from './dto/crear-contrato.dto';
@@ -13,7 +11,7 @@ import { EquipoJugador } from './entities/equipo-jugador.entity';
 import { Jugador } from './entities/jugador.entity';
 import { EquipoJugadorMapper } from './mappers/equipo-jugador.mapper';
 import { JugadorMapper } from './mappers/jugador.mapper';
-import { hoyBogota } from './utils/fechas';
+import { hoyBogota } from '../common/utils/fechas';
 
 // HU-GD-05 · ACUERDOS 6.5 y 9.8. Contratos equipo ↔ jugador: asignar, listar y retirar (nunca borrar).
 @Injectable()

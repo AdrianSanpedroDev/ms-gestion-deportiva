@@ -2,7 +2,6 @@
 // entidad ↔ DTO, no deciden reglas y no hablan con la BD: PREPARAN el texto del correo y lo DISPARAN.
 // "import type": Logger y CorreoService solo se usan como TIPOS de los parámetros.
 import type { Logger } from '@nestjs/common';
-// TODO: ajustar la ruta cuando A suba common/notificacion (NotificacionModule @Global, sección 8)
 import type { CorreoService } from '../../common/notificacion/correo.service';
 
 // Escapa los 5 caracteres especiales de HTML, para que un nombre como "Tigres <FC>" se vea tal cual
