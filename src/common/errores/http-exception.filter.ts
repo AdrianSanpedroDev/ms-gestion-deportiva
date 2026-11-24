@@ -28,6 +28,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       const status = exception.getStatus();
       const payload = exception.getResponse();
+      // 400 de validación de DTOs: el cuerpo ya es { campo: mensaje } (ACUERDOS 5.2) y se responde tal cual.
+      if (status === HttpStatus.BAD_REQUEST && typeof payload === 'object' && !('message' in payload)) {
+        response.status(status).json(payload);
+        return;
+      }
       const errorCase =
         status === HttpStatus.UNAUTHORIZED
           ? ErrorCase.UNAUTHORIZED

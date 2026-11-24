@@ -1,4 +1,4 @@
-import { ValidationPipe } from '@nestjs/common';
+import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/errores/http-exception.filter';
@@ -16,7 +16,9 @@ async function bootstrap() {
           const mensaje = Object.values(error.constraints ?? {})[0];
           if (mensaje) campos[error.property] = mensaje;
         }
-        return campos;
+        // El ValidationPipe LANZA lo que devuelva esta función: tiene que ser una excepción HTTP,
+        // no un objeto plano (si no, el filtro no la reconoce y responde 500).
+        return new BadRequestException(campos);
       },
     }),
   );
