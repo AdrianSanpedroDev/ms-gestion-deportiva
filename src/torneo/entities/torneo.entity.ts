@@ -41,6 +41,11 @@ export class Torneo {
   @Column({ type: 'varchar', length: 30 })
   estado!: EstadoTorneo;
 
-  @CreateDateColumn({ name: 'fecha_creacion', type: 'datetime', precision: 0 })
+  @CreateDateColumn({
+    name: 'fecha_creacion',
+    type: 'datetime',
+    precision: 0,
+    default: () => 'CURRENT_TIMESTAMP',
+  })
   fechaCreacion!: Date;
 }

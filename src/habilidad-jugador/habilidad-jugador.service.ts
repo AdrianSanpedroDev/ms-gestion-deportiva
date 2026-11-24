@@ -9,7 +9,7 @@ import { Habilidad } from '../habilidad/entities/habilidad.entity';
 import { Jugador } from '../jugador/entities/jugador.entity';
 import { JugadorMapper } from '../jugador/mappers/jugador.mapper';
 import { AsignarHabilidadDto } from './dto/asignar-habilidad.dto';
-import type { HabilidadResumen } from './dto/habilidad-resumen.dto';
+import type { HabilidadResumen } from '../common/dto/habilidad-resumen.dto';
 import { HabilidadJugador } from './entities/habilidad-jugador.entity';
 import { HabilidadJugadorMapper } from './mappers/habilidad-jugador.mapper';
 

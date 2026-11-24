@@ -1,6 +1,7 @@
+import { FindOperator } from 'typeorm';
+import { EstadoDto } from '../common/dto/estado.dto';
 import { ApplicationException } from '../common/errores/application.exception';
 import { ErrorCase } from '../common/errores/error-case.enum';
-import { EstadoDto } from '../common/dto/estado.dto';
 import { DeporteService } from './deporte.service';
 import { CrearDeporteDto } from './dto/crear-deporte.dto';
 import { Deporte } from './entities/deporte.entity';
@@ -64,7 +65,6 @@ describe('DeporteService', () => {
 
     service = new DeporteService(
       repo as never,
-      repo as never,
       torneoRepo as never,
       equipoDeporteRepo as never,
     );
@@ -92,6 +92,21 @@ describe('DeporteService', () => {
       ErrorCase.ALREADY_EXISTS,
     );
     expect(repo.save).not.toHaveBeenCalled();
+  });
+
+  it('usa IsNull() al filtrar soloPrincipales=true en listar()', async () => {
+    repo.find.mockResolvedValue([deporteEntidad()]);
+
+    const lista = await service.listar({ soloPrincipales: true });
+
+    expect(lista).toHaveLength(1);
+    const callArg = repo.find.mock.calls[0][0] as {
+      where: { deportePadre: unknown };
+    };
+    expect(callArg.where.deportePadre).toBeInstanceOf(FindOperator);
+    expect((callArg.where.deportePadre as FindOperator<unknown>).type).toBe(
+      'isNull',
+    );
   });
 
   it('carga deportePadre al buscar el padre para validar dos niveles', async () => {
@@ -131,6 +146,17 @@ describe('DeporteService', () => {
     );
   });
 
+  it('rechaza asignar padre a un deporte que ya tiene subdeportes (3 niveles)', async () => {
+    repo.findOne.mockResolvedValue(deporteEntidad({ id: 2 }));
+    repo.existsBy.mockResolvedValue(false);
+    repo.countBy.mockResolvedValue(2);
+
+    await esperarErrorCase(
+      service.actualizar(2, { nombre: 'Futbol', deportePadreId: 1 }),
+      ErrorCase.INVALID_OPERATION,
+    );
+  });
+
   it('cambia el estado de un deporte', async () => {
     repo.findOne.mockResolvedValue(deporteEntidad());
     const dto: EstadoDto = { activo: false };
@@ -147,10 +173,16 @@ describe('DeporteService', () => {
     expect(repo.remove).toHaveBeenCalledWith(deporteEntidad());
   });
 
-  it('no elimina un deporte asociado', async () => {
+  it('no elimina un deporte asociado y detalla qué asociaciones lo impiden', async () => {
     repo.findOne.mockResolvedValue(deporteEntidad());
     repo.countBy.mockResolvedValue(1);
-    await esperarErrorCase(service.eliminar(1), ErrorCase.HAS_ASSOCIATIONS);
+    equipoDeporteRepo.countBy.mockResolvedValue(2);
+    torneoRepo.countBy.mockResolvedValue(1);
+
+    await expect(service.eliminar(1)).rejects.toMatchObject({
+      errorCase: ErrorCase.HAS_ASSOCIATIONS,
+      message: expect.stringContaining('subdeporte'),
+    });
     expect(repo.remove).not.toHaveBeenCalled();
   });
 });

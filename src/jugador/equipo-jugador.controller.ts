@@ -56,7 +56,7 @@ export class EquipoJugadorController {
   retirar(
     @Param('equipoId', ParseIntPipe) equipoId: number,
     @Param('jugadorId', ParseIntPipe) jugadorId: number,
-    @Body() dto: RetiroContratoDto,
+    @Body() dto: RetiroContratoDto = {},
   ): Promise<ContratoResponseDto> {
     return this.equipoJugadorService.retirar(equipoId, jugadorId, dto);
   }

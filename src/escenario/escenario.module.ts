@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { EscenarioController } from './escenario.controller';
 import { Escenario } from './entities/escenario.entity';
+import { EscenarioController } from './escenario.controller';
+import { EscenarioService } from './escenario.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Escenario])],
   controllers: [EscenarioController],
+  providers: [EscenarioService],
 })
 export class EscenarioModule {}

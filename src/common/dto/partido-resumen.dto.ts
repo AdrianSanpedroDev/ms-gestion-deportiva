@@ -1,8 +1,7 @@
-import type { EquipoResumen } from '../../common/dto/equipo-resumen.dto';
 import type { EstadoPartido } from '../../partido/entities/estado-partido.enum';
-import type { RondaFinal } from '../entities/ronda-final.enum';
+import type { RondaFinal } from '../../fase/entities/ronda-final.enum';
+import type { EquipoResumen } from './equipo-resumen.dto';
 
-// PartidoResumen (ACUERDOS 5.6): definido en carpeta de Persona C mientras no exista en common/dto/.
 export interface PartidoResumen {
   id: number;
   equipoLocal: EquipoResumen;

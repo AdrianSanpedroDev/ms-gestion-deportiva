@@ -65,11 +65,14 @@ describe('DTOs de grupos (HU-GC-04)', () => {
   });
 
   describe('FiltrosGrupoDto', () => {
-    it('permite omitir orden o enviar orden como texto numérico positivo', async () => {
+    it('permite omitir orden, enviarlo vacío o como texto numérico positivo', async () => {
       const sinFiltro = await validar(FiltrosGrupoDto, {});
+      const vacio = await validar(FiltrosGrupoDto, { orden: '' });
       const conFiltro = await validar(FiltrosGrupoDto, { orden: '2' });
 
       expect(sinFiltro.errores).toHaveLength(0);
+      expect(vacio.errores).toHaveLength(0);
+      expect(vacio.dto.orden).toBeUndefined();
       expect(conFiltro.errores).toHaveLength(0);
       expect(conFiltro.dto.orden).toBe(2);
     });

@@ -1,9 +1,9 @@
 import { EquipoResumenDto } from '../../common/dto/equipo-resumen.dto';
-import { EstadoTorneo } from '../entities/estado-torneo.enum';
+import { TorneoResumen } from '../../common/dto/torneo-resumen.dto';
 
 export class InscripcionResponseDto {
   id!: number;
-  torneo!: { id: number; nombre: string; estado: EstadoTorneo };
+  torneo!: TorneoResumen;
   equipo!: EquipoResumenDto;
   fechaInscripcion!: string;
 }

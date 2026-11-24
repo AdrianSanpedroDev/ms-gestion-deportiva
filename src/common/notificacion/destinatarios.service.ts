@@ -17,9 +17,22 @@ export class DestinatariosService {
   }
 
   private correosPrueba(): string[] {
-    return (this.config.get<string>('NOTIFICACIONES_CORREOS_PRUEBA') ?? '')
+    const vistos = new Set<string>();
+    const resultado: string[] = [];
+    const crudos = (
+      this.config.get<string>('NOTIFICACIONES_CORREOS_PRUEBA') ?? ''
+    )
       .split(',')
       .map((correo) => correo.trim())
       .filter((correo) => correo.length > 0);
+
+    for (const correo of crudos) {
+      const clave = correo.toLowerCase();
+      if (!vistos.has(clave)) {
+        vistos.add(clave);
+        resultado.push(correo);
+      }
+    }
+    return resultado;
   }
 }

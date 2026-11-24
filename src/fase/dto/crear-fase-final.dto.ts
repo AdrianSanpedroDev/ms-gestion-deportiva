@@ -29,8 +29,8 @@ export class CrearFaseFinalDto {
   @MaxLength(100, {
     message: 'El nombre de la fase final no puede superar los 100 caracteres',
   })
-  @IsNotEmpty({ message: 'El nombre de la fase final es obligatorio' })
   @IsString({ message: 'El nombre de la fase final debe ser un texto' })
+  @IsNotEmpty({ message: 'El nombre de la fase final es obligatorio' })
   nombre!: string;
 
   @Min(1, {

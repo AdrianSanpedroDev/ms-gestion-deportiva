@@ -193,8 +193,9 @@ export class AnotacionService {
     }
 
     // Regla: contrato ACTIVO con el local O con el visitante (6.13). Arreglo en "where" = OR.
-    // Si tuviera los dos (puede, 6.5), gana el contrato más reciente.
-    const contrato = await this.equipoJugadorRepository.findOne({
+    // Si tuviera contrato activo con ambos (6.5), prioriza el vigente en la fecha del partido
+    // (mismo criterio que equiposDeLosJugadores) y si no, el más reciente.
+    const contratos = await this.equipoJugadorRepository.find({
       where: [
         {
           jugador: { id: jugador.id },
@@ -210,13 +211,17 @@ export class AnotacionService {
       relations: { equipo: true },
       order: { fechaInicio: 'DESC', id: 'DESC' },
     });
-    if (!contrato) {
+    if (contratos.length === 0) {
       throw new ApplicationException(
         ErrorCase.INVALID_OPERATION,
         `El jugador ${nombreJugador} no tiene contrato activo con '${partido.equipoLocal.nombre}' ni con '${partido.equipoVisitante.nombre}'`,
       );
     }
-    return contrato.equipo; // el equipo de la anotación se deduce de ese contrato (6.13)
+    const fechaPartido = aFechaHoraIso(partido.fechaHora).slice(0, 10);
+    const vigente =
+      contratos.find((c) => this.contratoCubreFecha(c, fechaPartido)) ??
+      contratos[0];
+    return vigente.equipo; // el equipo de la anotación se deduce de ese contrato (6.13)
   }
 
   // Para el listado (y para editar sin cambiar de jugador): jugadorId → equipo, con UNA consulta.

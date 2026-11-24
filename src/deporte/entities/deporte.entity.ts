@@ -38,6 +38,7 @@ export class Deporte {
     name: 'fecha_creacion',
     type: 'datetime',
     precision: 0,
+    default: () => 'CURRENT_TIMESTAMP',
   })
   fechaCreacion!: Date;
 }

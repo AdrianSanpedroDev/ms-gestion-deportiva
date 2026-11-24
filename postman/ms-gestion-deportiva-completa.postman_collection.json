@@ -1,0 +1,1020 @@
+{
+  "info": {
+    "_postman_id": "f1000000-2026-4e20-8000-000000000001",
+    "name": "ms-gestion-deportiva — Colección Completa (Entrega 2 · 16 HU)",
+    "description": "Colección unificada v2.1 ejecutable de principio a fin (A + B + C) con autenticación real en ms_security (:8181), pruebas de seguridad (401/403), happy path, validaciones 400 ({ campo: mensaje }), 404, 409 (ALREADY_EXISTS / HAS_ASSOCIATIONS), tabla de posiciones, llaves y desarrollo del torneo.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "00 - Seguridad y Autenticación (ms_security)",
+      "item": [
+        {
+          "name": "00.1 Login Administrador Deportivo (200)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const runId = String(Date.now()).slice(-6);",
+                  "pm.environment.set('runId', runId);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK - Login exitoso', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json();",
+                  "pm.expect(data.accessToken).to.be.a('string').and.not.empty;",
+                  "pm.environment.set('token', data.accessToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{securityBaseUrl}}/api/auth/login",
+              "host": ["{{securityBaseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "auth": { "type": "noauth" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "00.2 Acceso sin token devuelve 401 UNAUTHORIZED",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 Unauthorized', () => pm.response.to.have.status(401));",
+                  "pm.test('errorCase UNAUTHORIZED', () => pm.expect(pm.response.json().errorCase).to.eql('UNAUTHORIZED'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/deportes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "deportes"]
+            },
+            "auth": { "type": "noauth" }
+          }
+        },
+        {
+          "name": "00.3 Verificar permisos deportivos en /api/auth/me (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const me = pm.response.json();",
+                  "pm.test('Tiene rol ADMINISTRADOR DEPORTIVO', () => pm.expect(me.roles).to.include('ADMINISTRADOR DEPORTIVO'));",
+                  "pm.test('Tiene los 79 permisos deportivos', () => pm.expect(me.permissions.length).to.be.at.least(79));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{securityBaseUrl}}/api/auth/me",
+              "host": ["{{securityBaseUrl}}"],
+              "path": ["api", "auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 - HU-GD-01 Deportes (Solo Postman · A)",
+      "item": [
+        {
+          "name": "01.1 Crear deporte principal (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "const b = pm.response.json();",
+                  "pm.environment.set('deporteId', b.id);",
+                  "pm.test('deportePadre es null', () => pm.expect(b.deportePadre).to.eql(null));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/deportes", "host": ["{{baseUrl}}"], "path": ["api", "deportes"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Fútbol PM {{runId}}\",\n  \"descripcion\": \"Disciplina principal\"\n}" }
+          }
+        },
+        {
+          "name": "01.2 Crear subdeporte (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "const b = pm.response.json();",
+                  "pm.environment.set('subdeporteId', b.id);",
+                  "pm.test('deportePadre coincide', () => pm.expect(b.deportePadre.id).to.eql(Number(pm.environment.get('deporteId'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/deportes", "host": ["{{baseUrl}}"], "path": ["api", "deportes"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Fútbol Sala PM {{runId}}\",\n  \"descripcion\": \"Cancha cubierta\",\n  \"deportePadreId\": {{deporteId}}\n}" }
+          }
+        },
+        {
+          "name": "01.3 Rechazar deporte duplicado (409 ALREADY_EXISTS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('409 Conflict', () => pm.response.to.have.status(409));",
+                  "pm.expect(pm.response.json().errorCase).to.eql('ALREADY_EXISTS');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/deportes", "host": ["{{baseUrl}}"], "path": ["api", "deportes"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Fútbol PM {{runId}}\"\n}" }
+          }
+        },
+        {
+          "name": "01.4 Rechazar tercer nivel de subdeporte (400 INVALID_OPERATION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 Bad Request', () => pm.response.to.have.status(400));",
+                  "pm.expect(pm.response.json().errorCase).to.eql('INVALID_OPERATION');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/deportes", "host": ["{{baseUrl}}"], "path": ["api", "deportes"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Nivel 3 {{runId}}\",\n  \"deportePadreId\": {{subdeporteId}}\n}" }
+          }
+        },
+        {
+          "name": "01.5 Validación 400 { campo: mensaje } al enviar nombre vacío",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 Bad Request', () => pm.response.to.have.status(400));",
+                  "pm.test('Devuelve { nombre: mensaje }', () => pm.expect(pm.response.json().nombre).to.be.a('string'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/deportes", "host": ["{{baseUrl}}"], "path": ["api", "deportes"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"   \"\n}" }
+          }
+        },
+        {
+          "name": "01.6 Listar solo principales ?soloPrincipales=true (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.response.json().forEach((d) => pm.expect(d.deportePadre).to.eql(null));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/deportes?soloPrincipales=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "deportes"],
+              "query": [{ "key": "soloPrincipales", "value": "true" }]
+            }
+          }
+        },
+        {
+          "name": "01.7 Listar subdeportes del padre (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.expect(pm.response.json().some((d) => d.id === Number(pm.environment.get('subdeporteId')))).to.eql(true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/deportes/{{deporteId}}/subdeportes", "host": ["{{baseUrl}}"], "path": ["api", "deportes", "{{deporteId}}", "subdeportes"] }
+          }
+        },
+        {
+          "name": "01.8 Impedir eliminar padre con subdeportes (409 HAS_ASSOCIATIONS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('409 Conflict', () => pm.response.to.have.status(409));",
+                  "pm.expect(pm.response.json().errorCase).to.eql('HAS_ASSOCIATIONS');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/deportes/{{deporteId}}", "host": ["{{baseUrl}}"], "path": ["api", "deportes", "{{deporteId}}"] }
+          }
+        },
+        {
+          "name": "01.9 Cambiar estado del subdeporte (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.expect(pm.response.json().activo).to.eql(false);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/deportes/{{subdeporteId}}/estado", "host": ["{{baseUrl}}"], "path": ["api", "deportes", "{{subdeporteId}}", "estado"] },
+            "body": { "mode": "raw", "raw": "{\n  \"activo\": false\n}" }
+          }
+        },
+        {
+          "name": "01.10 Eliminar subdeporte libre (204)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('204 No Content', () => pm.response.to.have.status(204));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/deportes/{{subdeporteId}}", "host": ["{{baseUrl}}"], "path": ["api", "deportes", "{{subdeporteId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - HU-GD-02 Equipos y HU-GD-03 Equipo-Deporte (A)",
+      "item": [
+        {
+          "name": "02.1 Crear Equipo 1 (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('equipo1Id', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/equipos", "host": ["{{baseUrl}}"], "path": ["api", "equipos"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Once Caldas PM {{runId}}\",\n  \"ciudad\": \"Manizales\",\n  \"fechaFundacion\": \"1961-01-16\"\n}" }
+          }
+        },
+        {
+          "name": "02.2 Crear Equipo 2 (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('equipo2Id', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/equipos", "host": ["{{baseUrl}}"], "path": ["api", "equipos"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Pereira PM {{runId}}\",\n  \"ciudad\": \"Pereira\",\n  \"fechaFundacion\": \"1944-02-12\"\n}" }
+          }
+        },
+        {
+          "name": "02.3 Validación 400 fecha fundación futura",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 Bad Request', () => pm.response.to.have.status(400));",
+                  "pm.expect(pm.response.json().errorCase).to.eql('INVALID_OPERATION');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/equipos", "host": ["{{baseUrl}}"], "path": ["api", "equipos"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Futuro {{runId}}\",\n  \"ciudad\": \"Manizales\",\n  \"fechaFundacion\": \"2099-01-01\"\n}" }
+          }
+        },
+        {
+          "name": "02.4 Asociar Equipo 1 con Deporte (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('201 Created', () => pm.response.to.have.status(201));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/equipos/{{equipo1Id}}/deportes", "host": ["{{baseUrl}}"], "path": ["api", "equipos", "{{equipo1Id}}", "deportes"] },
+            "body": { "mode": "raw", "raw": "{\n  \"deporteId\": {{deporteId}}\n}" }
+          }
+        },
+        {
+          "name": "02.5 Asociar Equipo 2 con Deporte (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('201 Created', () => pm.response.to.have.status(201));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/equipos/{{equipo2Id}}/deportes", "host": ["{{baseUrl}}"], "path": ["api", "equipos", "{{equipo2Id}}", "deportes"] },
+            "body": { "mode": "raw", "raw": "{\n  \"deporteId\": {{deporteId}}\n}" }
+          }
+        },
+        {
+          "name": "02.6 Rechazar asociación duplicada (409 ALREADY_EXISTS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('409 Conflict', () => pm.response.to.have.status(409));",
+                  "pm.expect(pm.response.json().errorCase).to.eql('ALREADY_EXISTS');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/equipos/{{equipo1Id}}/deportes", "host": ["{{baseUrl}}"], "path": ["api", "equipos", "{{equipo1Id}}", "deportes"] },
+            "body": { "mode": "raw", "raw": "{\n  \"deporteId\": {{deporteId}}\n}" }
+          }
+        },
+        {
+          "name": "02.7 Consultar equipos de un deporte (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.expect(pm.response.json().length).to.be.at.least(2);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/deportes/{{deporteId}}/equipos", "host": ["{{baseUrl}}"], "path": ["api", "deportes", "{{deporteId}}", "equipos"] }
+          }
+        },
+        {
+          "name": "02.8 Listar escenarios disponibles (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.expect(pm.response.json()).to.be.an('array');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/escenarios", "host": ["{{baseUrl}}"], "path": ["api", "escenarios"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - HU-GD-04 a GD-08 Jugadores, Contratos, Habilidades y Perfil (B + C)",
+      "item": [
+        {
+          "name": "03.1 Crear Jugador (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('jugadorId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/jugadores", "host": ["{{baseUrl}}"], "path": ["api", "jugadores"] },
+            "body": { "mode": "raw", "raw": "{\n  \"tipoDocumento\": \"CC\",\n  \"numeroDocumento\": \"99{{runId}}\",\n  \"nombres\": \"Juan\",\n  \"apellidos\": \"Pérez {{runId}}\",\n  \"fechaNacimiento\": \"2001-05-10\",\n  \"email\": \"juan.{{runId}}@correo.com\",\n  \"telefono\": \"3001234567\"\n}" }
+          }
+        },
+        {
+          "name": "03.2 Asignar Jugador a Equipo 1 - Contrato (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('201 Created', () => pm.response.to.have.status(201));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/equipos/{{equipo1Id}}/jugadores", "host": ["{{baseUrl}}"], "path": ["api", "equipos", "{{equipo1Id}}", "jugadores"] },
+            "body": { "mode": "raw", "raw": "{\n  \"jugadorId\": {{jugadorId}},\n  \"fechaInicio\": \"2026-01-01\",\n  \"fechaFin\": \"2027-12-31\"\n}" }
+          }
+        },
+        {
+          "name": "03.3 Crear Habilidad (Solo Postman · 201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('habilidadId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/habilidades", "host": ["{{baseUrl}}"], "path": ["api", "habilidades"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Regate PM {{runId}}\",\n  \"descripcion\": \"Control en velocidad\",\n  \"categoria\": \"TECNICA\"\n}" }
+          }
+        },
+        {
+          "name": "03.4 Asignar Habilidad al Jugador (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('201 Created', () => pm.response.to.have.status(201));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}/habilidades", "host": ["{{baseUrl}}"], "path": ["api", "jugadores", "{{jugadorId}}", "habilidades"] },
+            "body": { "mode": "raw", "raw": "{\n  \"habilidadId\": {{habilidadId}}\n}" }
+          }
+        },
+        {
+          "name": "03.5 Consultar Perfil Deportivo del Jugador (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const p = pm.response.json();",
+                  "pm.expect(p.tieneEquipos).to.eql(true);",
+                  "pm.expect(p.tieneHabilidades).to.eql(true);",
+                  "pm.expect(p.mensajes).to.eql([]);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}/perfil", "host": ["{{baseUrl}}"], "path": ["api", "jugadores", "{{jugadorId}}", "perfil"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - HU-GC-01 a GC-05 Torneos, Inscripciones, Fases, Grupos y Fase Final (A + C)",
+      "item": [
+        {
+          "name": "04.1 Crear Torneo (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('torneoId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/torneos", "host": ["{{baseUrl}}"], "path": ["api", "torneos"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Copa Caldas PM {{runId}}\",\n  \"deporteId\": {{deporteId}},\n  \"descripcion\": \"Torneo de integración completa\",\n  \"fechaInicio\": \"2026-12-01\",\n  \"fechaFin\": \"2026-12-20\",\n  \"fechaCierreInscripciones\": \"2026-11-30\",\n  \"maxEquipos\": 4\n}" }
+          }
+        },
+        {
+          "name": "04.2 Inscribir Equipo 1 y Equipo 2 en lote (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "pm.expect(pm.response.json().length).to.eql(2);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/inscripciones", "host": ["{{baseUrl}}"], "path": ["api", "torneos", "{{torneoId}}", "inscripciones"] },
+            "body": { "mode": "raw", "raw": "{\n  \"equipoIds\": [{{equipo1Id}}, {{equipo2Id}}]\n}" }
+          }
+        },
+        {
+          "name": "04.3 Crear Grupo A en orden 1 (Solo Postman · 201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('grupoId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/grupos", "host": ["{{baseUrl}}"], "path": ["api", "torneos", "{{torneoId}}", "grupos"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Grupo A\",\n  \"orden\": 1\n}" }
+          }
+        },
+        {
+          "name": "04.4 Listar grupos con ?orden= vacío devuelve 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.expect(pm.response.json().length).to.eql(1);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/grupos?orden=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "torneos", "{{torneoId}}", "grupos"],
+              "query": [{ "key": "orden", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "04.5 Asignar Equipo 1 y Equipo 2 al Grupo A (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "pm.expect(pm.response.json().length).to.eql(2);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/grupos/{{grupoId}}/equipos", "host": ["{{baseUrl}}"], "path": ["api", "grupos", "{{grupoId}}", "equipos"] },
+            "body": { "mode": "raw", "raw": "{\n  \"equipoIds\": [{{equipo1Id}}, {{equipo2Id}}]\n}" }
+          }
+        },
+        {
+          "name": "04.6 Impedir retirar inscripción si el equipo ya está en un grupo (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 Bad Request', () => pm.response.to.have.status(400));",
+                  "pm.expect(pm.response.json().errorCase).to.eql('INVALID_OPERATION');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/inscripciones/{{equipo1Id}}", "host": ["{{baseUrl}}"], "path": ["api", "torneos", "{{torneoId}}", "inscripciones", "{{equipo1Id}}"] }
+          }
+        },
+        {
+          "name": "04.7 Crear Fase Final en orden 2 (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('faseFinalId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/fase-final", "host": ["{{baseUrl}}"], "path": ["api", "torneos", "{{torneoId}}", "fase-final"] },
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Fase Final\",\n  \"orden\": 2,\n  \"cantidadEquipos\": 2,\n  \"tercerPuesto\": false\n}" }
+          }
+        },
+        {
+          "name": "04.8 Cerrar inscripciones del torneo (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.expect(pm.response.json().estado).to.eql('INSCRIPCIONES_CERRADAS');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/estado", "host": ["{{baseUrl}}"], "path": ["api", "torneos", "{{torneoId}}", "estado"] },
+            "body": { "mode": "raw", "raw": "{\n  \"estado\": \"INSCRIPCIONES_CERRADAS\"\n}" }
+          }
+        },
+        {
+          "name": "04.9 Pasar torneo a EN_CURSO (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.expect(pm.response.json().estado).to.eql('EN_CURSO');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/estado", "host": ["{{baseUrl}}"], "path": ["api", "torneos", "{{torneoId}}", "estado"] },
+            "body": { "mode": "raw", "raw": "{\n  \"estado\": \"EN_CURSO\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - HU-GC-06, GC-07 y GC-08 Partidos, Resultados, Anotaciones y Desarrollo (B + C)",
+      "item": [
+        {
+          "name": "05.1 Programar partido en Grupo A (201 + correo nuevo partido)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('partidoGrupoId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/fases/{{grupoId}}/partidos", "host": ["{{baseUrl}}"], "path": ["api", "fases", "{{grupoId}}", "partidos"] },
+            "body": { "mode": "raw", "raw": "{\n  \"equipoLocalId\": {{equipo1Id}},\n  \"equipoVisitanteId\": {{equipo2Id}},\n  \"fechaHora\": \"2026-12-05T15:30:00\",\n  \"escenarioId\": null,\n  \"ronda\": null,\n  \"numeroLlave\": null\n}" }
+          }
+        },
+        {
+          "name": "05.2 Pasar partido de grupo a EN_JUEGO (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/partidos/{{partidoGrupoId}}/estado", "host": ["{{baseUrl}}"], "path": ["api", "partidos", "{{partidoGrupoId}}", "estado"] },
+            "body": { "mode": "raw", "raw": "{\n  \"estado\": \"EN_JUEGO\"\n}" }
+          }
+        },
+        {
+          "name": "05.3 Rechazar finalizar sin resultado (400 INVALID_OPERATION)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 Bad Request', () => pm.response.to.have.status(400));",
+                  "pm.expect(pm.response.json().errorCase).to.eql('INVALID_OPERATION');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/partidos/{{partidoGrupoId}}/estado", "host": ["{{baseUrl}}"], "path": ["api", "partidos", "{{partidoGrupoId}}", "estado"] },
+            "body": { "mode": "raw", "raw": "{\n  \"estado\": \"FINALIZADO\"\n}" }
+          }
+        },
+        {
+          "name": "05.4 Registrar resultado 2 - 1 (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.expect(pm.response.json().tieneResultado).to.eql(true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/partidos/{{partidoGrupoId}}/resultado", "host": ["{{baseUrl}}"], "path": ["api", "partidos", "{{partidoGrupoId}}", "resultado"] },
+            "body": { "mode": "raw", "raw": "{\n  \"marcadorLocal\": 2,\n  \"marcadorVisitante\": 1\n}" }
+          }
+        },
+        {
+          "name": "05.5 Registrar anotación del jugador (201 + correo anotación)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "const a = pm.response.json();",
+                  "pm.expect(a.equipo.id).to.eql(Number(pm.environment.get('equipo1Id')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/partidos/{{partidoGrupoId}}/anotaciones", "host": ["{{baseUrl}}"], "path": ["api", "partidos", "{{partidoGrupoId}}", "anotaciones"] },
+            "body": { "mode": "raw", "raw": "{\n  \"jugadorId\": {{jugadorId}},\n  \"minuto\": 34,\n  \"valor\": 1,\n  \"descripcion\": \"Gol de cabeza\"\n}" }
+          }
+        },
+        {
+          "name": "05.6 Finalizar partido de grupo (200 + correo resumen)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.expect(pm.response.json().estado).to.eql('FINALIZADO');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/partidos/{{partidoGrupoId}}/estado", "host": ["{{baseUrl}}"], "path": ["api", "partidos", "{{partidoGrupoId}}", "estado"] },
+            "body": { "mode": "raw", "raw": "{\n  \"estado\": \"FINALIZADO\"\n}" }
+          }
+        },
+        {
+          "name": "05.7 Consultar tabla de posiciones del Grupo A (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const tabla = pm.response.json();",
+                  "pm.expect(tabla[0].equipo.id).to.eql(Number(pm.environment.get('equipo1Id')));",
+                  "pm.expect(tabla[0].puntos).to.eql(3);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/grupos/{{grupoId}}/tabla-posiciones", "host": ["{{baseUrl}}"], "path": ["api", "grupos", "{{grupoId}}", "tabla-posiciones"] }
+          }
+        },
+        {
+          "name": "05.8 Programar partido en Fase Final - FINAL Llave #1 (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('partidoFinalId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/fases/{{faseFinalId}}/partidos", "host": ["{{baseUrl}}"], "path": ["api", "fases", "{{faseFinalId}}", "partidos"] },
+            "body": { "mode": "raw", "raw": "{\n  \"equipoLocalId\": {{equipo1Id}},\n  \"equipoVisitanteId\": {{equipo2Id}},\n  \"fechaHora\": \"2026-12-18T19:00:00\",\n  \"escenarioId\": null,\n  \"ronda\": \"FINAL\",\n  \"numeroLlave\": 1\n}" }
+          }
+        },
+        {
+          "name": "05.9 Consultar llaves de la Fase Final (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const ll = pm.response.json();",
+                  "pm.expect(ll.rondas[0].ronda).to.eql('FINAL');",
+                  "pm.expect(ll.rondas[0].llaves[0].partido.id).to.eql(Number(pm.environment.get('partidoFinalId')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/fases-finales/{{faseFinalId}}/llaves", "host": ["{{baseUrl}}"], "path": ["api", "fases-finales", "{{faseFinalId}}", "llaves"] }
+          }
+        },
+        {
+          "name": "05.10 Consultar Desarrollo Consolidado del Torneo (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json();",
+                  "pm.expect(d.resumen.totalPartidos).to.eql(2);",
+                  "pm.expect(d.resumen.conResultado).to.eql(1);",
+                  "pm.expect(d.resumen.pendientes).to.eql(1);",
+                  "pm.expect(d.fases.length).to.eql(2);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/torneos/{{torneoId}}/desarrollo", "host": ["{{baseUrl}}"], "path": ["api", "torneos", "{{torneoId}}", "desarrollo"] }
+          }
+        }
+      ]
+    }
+  ]
+}

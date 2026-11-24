@@ -23,6 +23,11 @@ export class Inscripcion {
   @JoinColumn({ name: 'equipo_id' })
   equipo!: Equipo;
 
-  @CreateDateColumn({ name: 'fecha_inscripcion', type: 'datetime', precision: 0 })
+  @CreateDateColumn({
+    name: 'fecha_inscripcion',
+    type: 'datetime',
+    precision: 0,
+    default: () => 'CURRENT_TIMESTAMP',
+  })
   fechaInscripcion!: Date;
 }

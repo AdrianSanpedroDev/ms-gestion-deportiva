@@ -23,7 +23,13 @@ async function bootstrap() {
     }),
   );
   app.useGlobalFilters(new HttpExceptionFilter());
-  app.enableCors({ origin: process.env.CORS_ORIGIN?.split(',') ?? true });
+  const corsOrigins = process.env.CORS_ORIGIN
+    ?.split(',')
+    .map((origin) => origin.trim())
+    .filter((origin) => origin.length > 0);
+  app.enableCors({
+    origin: corsOrigins && corsOrigins.length > 0 ? corsOrigins : 'http://localhost:5173',
+  });
   app.setGlobalPrefix('api');
   await app.listen(process.env.PORT ?? 8182);
 }

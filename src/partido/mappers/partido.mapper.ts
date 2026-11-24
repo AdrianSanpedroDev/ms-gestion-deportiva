@@ -27,8 +27,8 @@ export class PartidoMapper {
       fase,
       equipoLocal: local,
       equipoVisitante: visitante,
-      // Texto "2026-12-05T15:30:00" SIN "Z" → Date en hora local del proceso (ver partido.entity.ts).
-      fechaHora: new Date(dto.fechaHora),
+      // Parseo explícito de yyyy-MM-ddTHH:mm:ss en componentes locales para evitar desfases con TZ.
+      fechaHora: PartidoMapper.aFechaLocal(dto.fechaHora),
       escenario,
       ronda: dto.ronda ?? null, // si no vino, NULL (partido de grupo)
       numeroLlave: dto.numeroLlave ?? null,
@@ -79,5 +79,12 @@ export class PartidoMapper {
       return TipoFase.FINAL;
     }
     return TipoFase.GRUPO;
+  }
+
+  private static aFechaLocal(iso: string): Date {
+    const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})$/.exec(iso);
+    if (!match) return new Date(iso);
+    const [, y, m, d, h, min, s] = match.map(Number);
+    return new Date(y, m - 1, d, h, min, s);
   }
 }

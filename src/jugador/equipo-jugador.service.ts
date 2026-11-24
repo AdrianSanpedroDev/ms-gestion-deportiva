@@ -105,7 +105,7 @@ export class EquipoJugadorService {
   async retirar(
     equipoId: number,
     jugadorId: number,
-    dto: RetiroContratoDto,
+    dto: RetiroContratoDto = {},
   ): Promise<ContratoResponseDto> {
     // Solo se retira el contrato ACTIVO de esa pareja; los retirados ya son historial.
     const contrato = await this.equipoJugadorRepository.findOne({
@@ -124,7 +124,7 @@ export class EquipoJugadorService {
     }
 
     contrato.activo = false;
-    contrato.fechaRetiro = dto.fechaRetiro ?? hoyBogota(); // si no la envían, es hoy en Bogotá (9.8)
+    contrato.fechaRetiro = dto?.fechaRetiro ?? hoyBogota(); // si no la envían, es hoy en Bogotá (9.8)
     await this.equipoJugadorRepository.save(contrato); // save con id = UPDATE, nunca remove
     return EquipoJugadorMapper.aResponse(contrato);
   }

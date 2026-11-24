@@ -10,8 +10,8 @@ export class CrearGrupoDto {
   @MaxLength(100, {
     message: 'El nombre del grupo no puede superar los 100 caracteres',
   })
-  @IsNotEmpty({ message: 'El nombre del grupo es obligatorio' })
   @IsString({ message: 'El nombre del grupo debe ser un texto' })
+  @IsNotEmpty({ message: 'El nombre del grupo es obligatorio' })
   nombre!: string;
 
   @Min(1, { message: 'El orden del grupo debe ser mayor o igual a 1' })

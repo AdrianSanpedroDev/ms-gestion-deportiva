@@ -407,4 +407,44 @@ describe('DesarrolloService (HU-GC-08)', () => {
       resultado.fases[0].tablaPosiciones?.every((f) => f.jugados === 0),
     ).toBe(true);
   });
+
+  it('excluye partidos CANCELADO con marcador parcial de conResultado y de pendientes', async () => {
+    const grupoA = crearGrupo(3, 'Grupo A', 1);
+    const equipo1 = { id: 4, nombre: 'Once Caldas', activo: true } as Equipo;
+    const equipo2 = {
+      id: 9,
+      nombre: 'Deportes Pereira',
+      activo: true,
+    } as Equipo;
+
+    torneoRepository.findOne.mockResolvedValue(crearTorneo());
+    inscripcionRepository.countBy.mockResolvedValue(2);
+    faseRepository.find.mockResolvedValue([grupoA]);
+    grupoEquipoRepository.find.mockResolvedValue([
+      { grupo: grupoA, equipo: equipo1 },
+      { grupo: grupoA, equipo: equipo2 },
+    ]);
+    partidoRepository.find.mockResolvedValue([
+      {
+        id: 42,
+        fase: grupoA,
+        equipoLocal: equipo1,
+        equipoVisitante: equipo2,
+        fechaHora: new Date(2026, 11, 8, 16, 0, 0),
+        estado: EstadoPartido.CANCELADO,
+        marcadorLocal: 1,
+        marcadorVisitante: 0,
+        ronda: null,
+        numeroLlave: null,
+      } as Partido,
+    ]);
+
+    const resultado = await service.obtenerDesarrollo(1);
+
+    expect(resultado.resumen).toEqual({
+      totalPartidos: 1,
+      conResultado: 0,
+      pendientes: 0,
+    });
+  });
 });

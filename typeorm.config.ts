@@ -13,5 +13,6 @@ export default new DataSource({
   entities: ['src/**/*.entity.ts'],
   migrations: ['src/migrations/*.ts'],
   synchronize: false,
+  dateStrings: true,
   timezone: '-05:00',
 });

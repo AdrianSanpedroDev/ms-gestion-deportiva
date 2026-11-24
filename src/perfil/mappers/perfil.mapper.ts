@@ -1,5 +1,5 @@
 import { Habilidad } from '../../habilidad/entities/habilidad.entity';
-import type { HabilidadResumen } from '../../habilidad-jugador/dto/habilidad-resumen.dto';
+import type { HabilidadResumen } from '../../common/dto/habilidad-resumen.dto';
 import { HabilidadJugador } from '../../habilidad-jugador/entities/habilidad-jugador.entity';
 import { EquipoJugador } from '../../jugador/entities/equipo-jugador.entity';
 import { Jugador } from '../../jugador/entities/jugador.entity';

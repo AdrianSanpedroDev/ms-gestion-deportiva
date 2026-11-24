@@ -2,7 +2,7 @@ import type { JugadorResumen } from '../../common/dto/jugador-resumen.dto';
 import { Habilidad } from '../../habilidad/entities/habilidad.entity';
 import { Jugador } from '../../jugador/entities/jugador.entity';
 import { JugadorMapper } from '../../jugador/mappers/jugador.mapper';
-import type { HabilidadResumen } from '../dto/habilidad-resumen.dto';
+import type { HabilidadResumen } from '../../common/dto/habilidad-resumen.dto';
 import { HabilidadJugador } from '../entities/habilidad-jugador.entity';
 
 export class HabilidadJugadorMapper {

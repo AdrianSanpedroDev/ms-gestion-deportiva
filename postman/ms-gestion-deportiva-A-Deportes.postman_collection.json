@@ -161,7 +161,7 @@
         "url": {
           "raw": "{{baseUrl}}/api/deportes/{{deportePadreId}}/subdeportes",
           "host": [ "{{baseUrl}}" ],
-          "path": [ "api", "deportes", "{{deportePadreId}", "subdeportes" ]
+          "path": [ "api", "deportes", "{{deportePadreId}}", "subdeportes" ]
         }
       }
     },
@@ -221,7 +221,7 @@
         "url": {
           "raw": "{{baseUrl}}/api/deportes/{{subdeporteId}}/estado",
           "host": [ "{{baseUrl}}" ],
-          "path": [ "api", "deportes", "{{subdeporteId}", "estado" ]
+          "path": [ "api", "deportes", "{{subdeporteId}}", "estado" ]
         }
       }
     },
@@ -251,7 +251,7 @@
         "url": {
           "raw": "{{baseUrl}}/api/deportes/{{subdeporteId}}/estado",
           "host": [ "{{baseUrl}}" ],
-          "path": [ "api", "deportes", "{{subdeporteId}", "estado" ]
+          "path": [ "api", "deportes", "{{subdeporteId}}", "estado" ]
         }
       }
     },

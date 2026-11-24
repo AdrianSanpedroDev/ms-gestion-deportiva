@@ -23,6 +23,11 @@ export class EquipoDeporte {
   @JoinColumn({ name: 'deporte_id' })
   deporte!: Deporte;
 
-  @CreateDateColumn({ name: 'fecha_asociacion', type: 'datetime', precision: 0 })
+  @CreateDateColumn({
+    name: 'fecha_asociacion',
+    type: 'datetime',
+    precision: 0,
+    default: () => 'CURRENT_TIMESTAMP',
+  })
   fechaAsociacion!: Date;
 }

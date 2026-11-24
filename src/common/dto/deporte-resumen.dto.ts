@@ -3,3 +3,4 @@ export class DeporteResumenDto {
   nombre!: string;
   activo!: boolean;
 }
+export { DeporteResumenDto as DeporteResumen };

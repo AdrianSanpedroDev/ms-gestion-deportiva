@@ -6,7 +6,7 @@ import type {
   LlavesResponseDto,
   RondaLlavesDto,
 } from '../dto/llaves-response.dto';
-import type { PartidoResumen } from '../dto/partido-resumen.dto';
+import type { PartidoResumen } from '../../common/dto/partido-resumen.dto';
 import type { FaseFinal } from '../entities/fase.entity';
 import { FaseMapper } from './fase.mapper';
 

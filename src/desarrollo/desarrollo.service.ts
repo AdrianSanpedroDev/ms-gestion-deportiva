@@ -150,16 +150,20 @@ export class DesarrolloService {
   }
 
   // Resumen global de partidos del torneo:
-  // - conResultado: partidos con marcadorLocal y marcadorVisitante registrados.
-  // - pendientes: partidos sin resultado que NO estén CANCELADO.
+  // - Los partidos CANCELADO no cuentan como conResultado ni como pendientes.
+  // - conResultado: partidos no cancelados con marcadorLocal y marcadorVisitante registrados.
+  // - pendientes: partidos no cancelados sin resultado.
   private calcularResumen(partidos: Partido[]): ResumenDesarrolloDto {
     let conResultado = 0;
     let pendientes = 0;
 
     for (const partido of partidos) {
+      if (partido.estado === EstadoPartido.CANCELADO) {
+        continue;
+      }
       if (tieneResultado(partido)) {
         conResultado += 1;
-      } else if (partido.estado !== EstadoPartido.CANCELADO) {
+      } else {
         pendientes += 1;
       }
     }

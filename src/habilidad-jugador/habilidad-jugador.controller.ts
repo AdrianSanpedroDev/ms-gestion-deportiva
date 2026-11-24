@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import type { JugadorResumen } from '../common/dto/jugador-resumen.dto';
 import { AsignarHabilidadDto } from './dto/asignar-habilidad.dto';
-import type { HabilidadResumen } from './dto/habilidad-resumen.dto';
+import type { HabilidadResumen } from '../common/dto/habilidad-resumen.dto';
 import { HabilidadJugadorService } from './habilidad-jugador.service';
 
 // HU-GD-07 · ACUERDOS 9.12. Solo recibe HTTP, valida tipos y delega al service.

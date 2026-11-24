@@ -27,6 +27,11 @@ export class Equipo {
   @Column({ type: 'boolean', default: true })
   activo!: boolean;
 
-  @CreateDateColumn({ name: 'fecha_creacion', type: 'datetime', precision: 0 })
+  @CreateDateColumn({
+    name: 'fecha_creacion',
+    type: 'datetime',
+    precision: 0,
+    default: () => 'CURRENT_TIMESTAMP',
+  })
   fechaCreacion!: Date;
 }

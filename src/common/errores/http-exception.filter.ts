@@ -28,29 +28,45 @@ export class HttpExceptionFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       const status = exception.getStatus();
       const payload = exception.getResponse();
-      // 400 de validación de DTOs: el cuerpo ya es { campo: mensaje } (ACUERDOS 5.2) y se responde tal cual.
-      if (status === HttpStatus.BAD_REQUEST && typeof payload === 'object' && !('message' in payload)) {
+
+      // 400 de validación de DTOs (ValidationPipe): objeto plano { campo: mensaje } sin statusCode (ACUERDOS 5.2).
+      if (
+        status === HttpStatus.BAD_REQUEST &&
+        typeof payload === 'object' &&
+        payload !== null &&
+        !Array.isArray(payload) &&
+        !('statusCode' in payload)
+      ) {
         response.status(status).json(payload);
         return;
       }
-      const errorCase =
-        status === HttpStatus.UNAUTHORIZED
-          ? ErrorCase.UNAUTHORIZED
-          : status === HttpStatus.FORBIDDEN
-            ? ErrorCase.FORBIDDEN
-            : status === HttpStatus.SERVICE_UNAVAILABLE
-              ? ErrorCase.SERVICE_UNAVAILABLE
-              : ErrorCase.INTERNAL_ERROR;
-      if (typeof payload === 'object' && 'message' in payload) {
-        response.status(status).json({ errorCase, message: String(payload.message) });
-      } else {
-        response.status(status).json({ errorCase, message: exception.message });
-      }
+
+      const errorCase = this.errorCaseForStatus(status);
+      const rawMessage =
+        typeof payload === 'object' && payload !== null && 'message' in payload
+          ? String((payload as { message: unknown }).message)
+          : exception.message;
+
+      const message =
+        status === HttpStatus.BAD_REQUEST &&
+        rawMessage.includes('numeric string is expected')
+          ? 'El identificador numérico en la ruta es inválido'
+          : rawMessage;
+
+      response.status(status).json({ errorCase, message });
       return;
     }
 
     if (exception instanceof QueryFailedError) {
-      const code = (exception as unknown as { code?: string }).code;
+      const driverError = (
+        exception as QueryFailedError & {
+          driverError?: { code?: string };
+          code?: string;
+        }
+      ).driverError;
+      const code =
+        driverError?.code ?? (exception as unknown as { code?: string }).code;
+
       if (code === 'ER_DUP_ENTRY') {
         response.status(HttpStatus.CONFLICT).json({
           errorCase: ErrorCase.ALREADY_EXISTS,
@@ -74,6 +90,25 @@ export class HttpExceptionFilter implements ExceptionFilter {
     });
   }
 
+  private errorCaseForStatus(status: number): ErrorCase {
+    switch (status) {
+      case HttpStatus.BAD_REQUEST:
+        return ErrorCase.INVALID_OPERATION;
+      case HttpStatus.UNAUTHORIZED:
+        return ErrorCase.UNAUTHORIZED;
+      case HttpStatus.FORBIDDEN:
+        return ErrorCase.FORBIDDEN;
+      case HttpStatus.NOT_FOUND:
+        return ErrorCase.NOT_FOUND;
+      case HttpStatus.CONFLICT:
+        return ErrorCase.ALREADY_EXISTS;
+      case HttpStatus.SERVICE_UNAVAILABLE:
+        return ErrorCase.SERVICE_UNAVAILABLE;
+      default:
+        return ErrorCase.INTERNAL_ERROR;
+    }
+  }
+
   private statusFor(errorCase: ErrorCase): number {
     switch (errorCase) {
       case ErrorCase.NOT_FOUND:
@@ -87,6 +122,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
         return HttpStatus.FORBIDDEN;
       case ErrorCase.SERVICE_UNAVAILABLE:
         return HttpStatus.SERVICE_UNAVAILABLE;
+      case ErrorCase.INTERNAL_ERROR:
+        return HttpStatus.INTERNAL_SERVER_ERROR;
       default:
         return HttpStatus.BAD_REQUEST;
     }

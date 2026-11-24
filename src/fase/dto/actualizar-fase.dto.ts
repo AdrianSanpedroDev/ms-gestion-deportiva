@@ -19,8 +19,8 @@ export class ActualizarFaseDto {
   @MaxLength(100, {
     message: 'El nombre de la fase no puede superar los 100 caracteres',
   })
-  @IsNotEmpty({ message: 'El nombre de la fase no puede estar vacío' })
   @IsString({ message: 'El nombre de la fase debe ser un texto' })
+  @IsNotEmpty({ message: 'El nombre de la fase no puede estar vacío' })
   nombre?: string;
 
   @IsOptional()

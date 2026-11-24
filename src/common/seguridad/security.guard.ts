@@ -11,7 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import axios from 'axios';
 import { Request } from 'express';
-import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+import { IS_PUBLIC_KEY } from './public.decorator';
 
 interface PermissionValidationResponse {
   allowed: boolean;
@@ -27,9 +27,10 @@ export class SecurityGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // El guard solo valida peticiones HTTP; los eventos del gateway se ignoran.
     if (context.getType() !== 'http') return true;
-    if (this.configService.get<string>('SEGURIDAD_HABILITADA', 'true') === 'false') {
+    if (
+      this.configService.get<string>('SEGURIDAD_HABILITADA', 'true') === 'false'
+    ) {
       return true;
     }
 
@@ -42,9 +43,11 @@ export class SecurityGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<Request>();
     const token = this.extractBearerToken(request.headers.authorization);
 
-    const securityBaseUrl = this.configService.get<string>('MS_SECURITY');
+    const securityBaseUrl = this.configService
+      .get<string>('MS_SECURITY')
+      ?.replace(/\/+$/, '');
     if (!securityBaseUrl) {
-      this.logger.error('MS_SECURITY no esta configurada');
+      this.logger.error('MS_SECURITY no está configurada');
       throw new ServiceUnavailableException(
         'Servicio de seguridad no configurado',
       );
@@ -54,8 +57,7 @@ export class SecurityGuard implements CanActivate {
       const response = await axios.post<PermissionValidationResponse>(
         `${securityBaseUrl}/api/internal/security/permissions-validation`,
         {
-          // La tabla de permisos de ms_security registra rutas como /movies.
-          // No se incluye el query string porque no forma parte del permiso.
+          // No incluye query string porque los permisos en ms_security se registran por ruta y método.
           url: request.path,
           method: request.method,
         },
@@ -71,17 +73,16 @@ export class SecurityGuard implements CanActivate {
         'No tiene permiso para acceder a este recurso',
       );
     } catch (error) {
-      // No se transforma el rechazo normal de permisos en un error de infraestructura.
       if (error instanceof ForbiddenException) throw error;
 
       if (axios.isAxiosError(error)) {
         const status = error.response?.status;
         this.logger.warn(
-          `Validacion de permisos rechazada: ${status ?? error.code ?? 'sin respuesta'}`,
+          `Validación de permisos rechazada: ${status ?? error.code ?? 'sin respuesta'}`,
         );
 
         if (status === 401) {
-          throw new UnauthorizedException('Token invalido o expirado');
+          throw new UnauthorizedException('Token inválido o expirado');
         }
         if (status === 403) {
           throw new ForbiddenException(
@@ -99,16 +100,13 @@ export class SecurityGuard implements CanActivate {
 
   private extractBearerToken(authorization?: string): string {
     if (!authorization) {
-      throw new UnauthorizedException('Token de autorizacion faltante');
+      throw new UnauthorizedException('Token de autorización faltante');
     }
 
-    const [scheme, token] = authorization.split(' ');
-    if (
-      scheme !== 'Bearer' ||
-      !token ||
-      authorization.split(' ').length !== 2
-    ) {
-      throw new UnauthorizedException('Formato de Authorization invalido');
+    const parts = authorization.split(' ');
+    const [scheme, token] = parts;
+    if (scheme !== 'Bearer' || !token || parts.length !== 2) {
+      throw new UnauthorizedException('Formato de Authorization inválido');
     }
 
     return token;
