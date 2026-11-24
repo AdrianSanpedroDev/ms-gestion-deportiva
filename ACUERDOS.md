@@ -27,11 +27,11 @@ Si eres una IA (Claude, ChatGPT, Copilot, Cursor, etc.) ayudando a un miembro de
 
 ## 1. Quién es quién
 
-**Fecha de entrega: lunes 24/11/2026.**
+**Fecha de entrega:  **A** | **Nicolás** (`nico` en los commits) | HU-GD-01, HU-GD-02, HU-GD-03, HU-GC-01, HU-GC-02 | Fase 0 (esqueleto Nest y base del front), correo (`ms-notifications`), escenario mínimo |lunes 24/11/2026.**
 
 | Persona | Nombre | Historias de usuario | Extra |
 |---|---|---|---|
-| **A** | **Nicolás** (`nico` en los commits) | HU-GD-01, HU-GD-02, HU-GD-03, HU-GC-01, HU-GC-02 | Fase 0 (esqueleto Nest y base del front), correo (`ms-notifications`), escenario mínimo |
+|
 | **B** | **Adrián** (GitHub `AdrianSanpedroDev`) | HU-GD-04, HU-GD-05, HU-GD-06, HU-GC-06, HU-GC-07 | Crea el repo `ms-gestion-deportiva` |
 | **C** | **Andrei** (GitHub `Kippie01PW`) | HU-GD-07, HU-GD-08, HU-GC-03, HU-GC-04, HU-GC-05, HU-GC-08 | Endpoint de validación de permisos en `ms_security` (propuesto) |
 

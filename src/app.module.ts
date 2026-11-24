@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { SecurityGuard } from './common/guards/security.guard';
 import { NotificacionModule } from './common/notificacion/notificacion.module';
 import { DeporteModule } from './deporte/deporte.module';
 import { DesarrolloModule } from './desarrollo/desarrollo.module';
@@ -46,12 +44,6 @@ import { TorneoModule } from './torneo/torneo.module';
     PerfilModule,
     FaseModule,
     DesarrolloModule,
-  ],
-  providers: [
-    {
-      provide: APP_GUARD,
-      useClass: SecurityGuard,
-    },
   ],
 })
 export class AppModule {}
