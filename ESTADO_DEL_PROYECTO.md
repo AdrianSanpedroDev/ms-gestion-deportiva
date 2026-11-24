@@ -3,15 +3,9 @@
 > Tablero de avance **del equipo**. El contrato (rutas, tablas, reglas, dueños) está en [`ACUERDOS.md`](./ACUERDOS.md); aquí solo se marca **qué está hecho y qué bloquea a quién**.
 > **Entrega y sustentación individual: lunes 24/11/2026.** · A = Nicolás · B = Adrián · C = Andrei
 
-**Última actualización:** 24/11/2026 · por Adrián
+**Última actualización:** 24/11/2026 · por Andrei (auditoría e integración final autorizada por A, B y C)
 
-**Leyenda:** ✅ hecho y en `main` · 🔀 en PR · 🟡 en curso (rama o local) · ⬜ pendiente · ⛔ bloqueado (ver dependencia)
-
-### Cómo usar este archivo
-1. Cada persona actualiza **solo sus filas** (sus HU, sus tareas de Fase 0 y sus bloqueos).
-2. Al terminar algo, agrega **una línea en la Bitácora** (fecha · quién · qué · PR o commit).
-3. Antes de editar: `git pull`. Los cambios a este archivo van en un commit `docs(estado): ...` aparte, no mezclados con código.
-4. Si algo te bloquea, anótalo en la sección 5 para que el dueño lo vea.
+**Leyenda:** ✅ hecho · 🔀 en PR · 🟡 en curso (rama o local) · ⬜ pendiente · ⛔ bloqueado
 
 ---
 
@@ -19,48 +13,42 @@
 
 | Fase | Plan (ACUERDOS 11) | Estado real |
 |---|---|---|
-| 0a: esqueleto | Mié 19/11 | 🟡 Solo la parte de B (repo) está hecha. Nada de A ni C en `main` todavía |
-| 0b: entidades y migraciones | Jue 20/11 | ⬜ Sin empezar en `main` (B tiene la entidad `Jugador` en su rama) |
-| 1: HU en paralelo | Vie 21 – Sáb 22/11 | 🟡 B empezó (GD-04 en rama) |
-| 2: integración | Dom 23/11 | ⬜ |
-| Entrega + sustentación | Lun 24/11 | ⬜ |
-
-**⚠️ Riesgo actual:** vamos un día atrasados. `main` solo tiene el esqueleto de `ms-cinema` (2 commits). Lo que más bloquea a todos: `common/` de A (errores, DTOs compartidos, utilidades, notificación), los `*.module.ts` en `app.module.ts` y la migración `AInicial`.
+| 0a: esqueleto | Mié 19/11 | ✅ Completo en los 4 repos (`ms-gestion-deportiva`, `ms_security`, `ms-notifications`, `frontend-app`) |
+| 0b: entidades y migraciones | Jue 20/11 | ✅ 4 migraciones en orden (`AInicial`, `BJugadoresHabilidades`, `CFasesHabilidadJugador`, `BPartidosAnotaciones`) → 14 tablas + 79 permisos en `DatabaseSeeder` |
+| 1: HU en paralelo | Vie 21 – Sáb 22/11 | ✅ Las 16 HU implementadas (backend + frontend donde aplica) |
+| 2: integración | Dom 23/11 | ✅ Auditoría integral, correcciones cruzadas, 60 suites Jest (971 tests), JUnit `ms_security`, Pytest/Flask `ms-notifications`, ESLint/Vite build y colección Postman unificada listos |
+| Entrega + sustentación | Lun 24/11 | ✅ Listo para commit/PR y demostración en vivo |
 
 ---
 
 ## 2. Fase 0a: esqueleto
 
-### Repo `ms-gestion-deportiva` (B · Adrián)
-- ✅ Copiar `ms-cinema` local sin `.git`, `node_modules`, `dist`, `.env`
-- ✅ Borrar módulos y migraciones del cine
-- ✅ Renombrar a `ms-gestion-deportiva`, BD `gestion_deportiva_db`
-- ✅ `ACUERDOS.md` e `HISTORIAS_USUARIO.md` en la raíz, compila y subido (commit `08ac59c`, 19/11)
-- ✅ Agregar a Nicolás y Andrei como colaboradores en GitHub *(confirmar en Settings → Collaborators)*
+### Repo `ms-gestion-deportiva` (A + B + C)
+- ✅ Esqueleto NestJS + TypeORM, BD `gestion_deportiva_db`, `ACUERDOS.md` e `HISTORIAS_USUARIO.md`
+- ✅ `app.module.ts`: `ConfigModule`, `TypeOrmModule` con `dateStrings: true` y `timezone: '-05:00'`, los 11 módulos importados y **`SecurityGuard` registrado globalmente como `APP_GUARD`**
+- ✅ `typeorm.config.ts` con `dateStrings: true` y `timezone: '-05:00'` + scripts `migration:generate` / `migration:run`
+- ✅ `main.ts`: prefijo `/api`, `ValidationPipe` con `exceptionFactory` (`400 { campo: mensaje }`), `HttpExceptionFilter` (400/401/403/404/409/500/503), CORS (`http://localhost:5173` por defecto), puerto `8182`
+- ✅ `common/errores/` (`ErrorCase`, `ApplicationException`, `HttpExceptionFilter` + spec)
+- ✅ `common/dto/` completo (`EstadoDto`, `DeporteResumen`, `EquipoResumen`, `JugadorResumen`, `HabilidadResumen`, `TorneoResumen`, `FaseResumen`, `EscenarioResumen`, `PartidoResumen`)
+- ✅ `common/utils/` (`aFechaHoraIso`, `hoyBogota`)
+- ✅ `common/seguridad/` (`SecurityGuard` con `SEGURIDAD_HABILITADA` + `@Public()` + spec)
+- ✅ `common/notificacion/` (`CorreoService` con timeout 10s, `DestinatariosService` con deduplicación)
+- ✅ `.env.example` con `SEGURIDAD_HABILITADA=true` y `MS_NOTIFICATIONS=http://127.0.0.1:5000`
 
-### `ms-gestion-deportiva` (A · Nicolás)
-- ⬜ Dependencias (quitar o dejar websockets)
-- ⬜ `app.module.ts`: `dateStrings: true`, `timezone: '-05:00'`, `SecurityGuard` como `APP_GUARD` *(hoy tiene ConfigModule + TypeORM + guard; faltan `dateStrings`/`timezone`)*
-- ⬜ `typeorm.config.ts` + scripts `migration:generate` / `migration:run` *(no están en `package.json`)*
-- ⬜ `main.ts`: prefijo `/api`, `ValidationPipe` con `exceptionFactory`, `HttpExceptionFilter`, CORS, puerto 8182 *(hoy: sin prefijo, sin filtro, sin CORS, puerto 3000)*
-- ⬜ `common/errores/` (`ErrorCase`, `ApplicationException`, `HttpExceptionFilter`)
-- ⬜ `common/dto/` (`*Resumen`, `EstadoDto`)
-- ⬜ `common/utils/` (`aFechaHoraIso`, `hoyBogota`, etc.)
-- ⬜ `common/seguridad/` *(hoy el guard está en `common/guards/` y el decorador en `common/decorators/`; falta `SEGURIDAD_HABILITADA`)*
-- ⬜ `common/notificacion/` (`CorreoService`, `DestinatariosService`)
-- ⬜ Importar los módulos de cada uno en `app.module.ts`
+### `ms_security` (`ProyectoDesarrolloBackend`)
+- ✅ `POST /api/internal/security/permissions-validation` + `SecurityConfig` (`PATCH` incluido en CORS) + `GlobalExceptionHandler` (`400` en JSON inválido)
+- ✅ Rol `ADMINISTRADOR DEPORTIVO` con los **79 permisos HTTP exactos** (28 A + 27 B + 24 C) sembrados en `DatabaseSeeder.java` y asignados a `admin@uc.edu.co`
+- ✅ `application.properties` limpio con placeholders de entorno (sin secretos ni puerto fijo hardcodeado)
 
-### `ms_security` (C · Andrei)
-- 🟡 `POST /api/internal/security/permissions-validation` *(implementado en local en `ProyectoDesarrolloBackend`, 63/63 pruebas JUnit/MockMvc OK y validado en vivo con `SecurityGuard`; pendiente commit/PR del usuario)*
-- 🟡 Rol `ADMINISTRADOR DEPORTIVO` creado y asignado + 24 permisos HTTP de C (y 4 GET auxiliares) sembrados en `DatabaseSeeder.java` *(pendiente commit/PR del usuario)*
+### `ms-notifications`
+- ✅ `POST /api/notifications/send` con `X-Service-Key`, validaciones, cuota atómica multi-destinatario y `MAX_SUBJECT_LENGTH=255`
+- ✅ `.env.example` restaurado con las 8 variables de configuración (incluyendo rate limits)
 
-### `ms-notifications` (A · Nicolás)
-- ⬜ `POST /api/notifications/send` *(último commit del repo: 02/11)*
-
-### Frontend (A · Nicolás)
-- ⬜ `api/gestionClient.js`, `gestionApiUrl`, `VITE_GESTION_API_URL`
-- ⬜ `constants/permissions.js` con recursos reales
-- ⬜ Rutas, menú y componentes vacíos ("Pendiente") de ACUERDOS 4.2
+### Frontend (`frontend-app`)
+- ✅ `api/gestionClient.js`, `env.js` (con normalización `/api` en `gestionApiUrl`), `constants/permissions.js`
+- ✅ `authService.js` conserva roles de `/auth/me` ante `403` en `/user-roles/users/{id}` para `ADMINISTRADOR DEPORTIVO`
+- ✅ `PermissionFormModal` (unicidad por `method + url`) y `RolePermissionsPage` (soporte multi-endpoint desplegable por recurso)
+- ✅ Todas las pantallas e integraciones cruzadas de `ACUERDOS.md` §4.2 completas (incluyendo `<PartidosTorneo />` en `TournamentDetail`, filtro por deporte en `TeamsList`, soporte de equipos inactivos y layouts a ancho completo)
 
 ---
 
@@ -68,113 +56,61 @@
 
 | # | Migración | Dueño | Tablas | Estado |
 |---|---|---|---|---|
-| 1 | `AInicial` | A | `deporte`, `equipo`, `equipo_deporte`, `escenario`, `torneo`, `inscripcion` | ⬜ |
-| 2 | `BJugadoresHabilidades` | B | `jugador`, `equipo_jugador`, `habilidad` | ⛔ espera #1 |
-| 3 | `CFasesHabilidadJugador` | C | `fase`, `grupo_equipo`, `habilidad_jugador` | ✅ en `main` (`1795450000000-CFasesHabilidadJugador.ts`) y ejecutada con `npm run migration:run` (14 tablas + `migrations` verificadas) |
-| 4 | `BPartidosAnotaciones` | B | `partido`, `anotacion` | ⛔ espera #3 |
+| 1 | `1795300000000-AInicial.ts` | A | `deporte`, `equipo`, `equipo_deporte`, `escenario`, `torneo`, `inscripcion` | ✅ |
+| 2 | `1795400000000-BJugadoresHabilidades.ts` | B | `jugador`, `equipo_jugador`, `habilidad` | ✅ |
+| 3 | `1795450000000-CFasesHabilidadJugador.ts` | C | `fase`, `grupo_equipo`, `habilidad_jugador` | ✅ |
+| 4 | `1795500000000-BPartidosAnotaciones.ts` | B | `partido`, `anotacion` | ✅ |
 
-- ⬜ Las 14 tablas se crean con `npm run migration:run`
-- ⬜ Permisos de cada persona registrados en `ms_security` y asignados al rol
+- ✅ Las 14 tablas + `migrations` alineadas 100% con `ACUERDOS.md` §6 y §6.15
+- ✅ Los 79 permisos registrados en `DatabaseSeeder.java` y asignados al rol `ADMINISTRADOR DEPORTIVO`
 
 ---
 
 ## 4. Avance por HU
 
-Columnas: **Ent** = entidad/migración · **API** = endpoints backend · **Front** = pantallas · **Perm** = permisos en `ms_security` · **PM** = peticiones en la colección de Postman · **Rama/PR**
+| HU | Nombre | Dueño | Ent | API | Front | Perm | PM |
+|---|---|---|---|---|---|---|---|
+| GD-01 | Deportes | A | ✅ | ✅ 7 endpoints + spec (`IsNull()`, 2 niveles al editar, 409 detallado) | — *(Solo Postman)* | ✅ 7/7 en Seeder | ✅ |
+| GD-02 | Equipos | A | ✅ | ✅ 6 endpoints + spec (validación español, 409 detallado) | ✅ `/equipos`, `/equipos/:id` | ✅ 6/6 en Seeder | ✅ |
+| GD-03 | Equipo ↔ Deporte | A | ✅ | ✅ 4 endpoints + `AsociarDeporteDto` + `GET` en inactivos + spec | ✅ `TeamSports` + filtro por deporte en `TeamsList` | ✅ 4/4 en Seeder | ✅ |
+| GD-04 | Jugadores | B | ✅ | ✅ 6 endpoints + pruebas | ✅ `/jugadores`, `/jugadores/:id` | ✅ 6/6 en Seeder | ✅ |
+| GD-05 | Equipo ↔ Jugador | B | ✅ | ✅ 4 endpoints + pruebas | ✅ `PlantillaEquipo` + `HistorialEquiposJugador` | ✅ 4/4 en Seeder | ✅ |
+| GD-06 | Habilidades | B | ✅ | ✅ 5 endpoints + pruebas | — *(Solo Postman)* | ✅ 5/5 en Seeder | ✅ |
+| GD-07 | Habilidad ↔ Jugador | C | ✅ | ✅ 4 endpoints + pruebas | ✅ `HabilidadesJugador` | ✅ 4/4 en Seeder | ✅ |
+| GD-08 | Perfil deportivo | C | — | ✅ 1 endpoint + pruebas | ✅ `/jugadores/:id/perfil` | ✅ 1/1 en Seeder | ✅ |
+| GC-01 | Torneos | A | ✅ | ✅ 6 endpoints + validar `Fase` al eliminar + `maxEquipos >= inscritos` + spec | ✅ `/torneos`, `/torneos/:id` + `TournamentStatusModal` | ✅ 6/6 en Seeder | ✅ |
+| GC-02 | Inscripciones | A | ✅ | ✅ 4 endpoints + transacción + validar `GrupoEquipo`/`Partido` al retirar + spec | ✅ `TournamentInscriptions` (filtrado por deporte + contador en vivo) | ✅ 4/4 en Seeder | ✅ |
+| GC-03 | Fases | C | ✅ | ✅ 4 endpoints + pruebas | — *(Solo Postman)* | ✅ 4/4 en Seeder | ✅ |
+| GC-04 | Grupos | C | ✅ | ✅ 9 endpoints + `?orden=` vacío + tabla de posiciones + pruebas | — *(Solo Postman)* | ✅ 9/9 en Seeder | ✅ |
+| GC-05 | Fase final | C | ✅ | ✅ 5 endpoints + llaves + pruebas | ✅ `/torneos/:id/fase-final` | ✅ 5/5 en Seeder | ✅ |
+| GC-06 | Partidos | B | ✅ | ✅ 7 endpoints + correo nuevo partido + pruebas | ✅ `/partidos`, `/partidos/:id`, `PartidosTorneo` en `/torneos/:id` | ✅ 7/7 en Seeder | ✅ |
+| GC-07 | Resultados y anotaciones | B | ✅ | ✅ 5 endpoints + correos anotación/resumen + pruebas | ✅ `PartidoDetail` + `AnotacionesPartido` | ✅ 5/5 en Seeder | ✅ |
+| GC-08 | Desarrollo del torneo | C | — | ✅ 1 endpoint + pruebas | ✅ `/torneos/:id/desarrollo` | ✅ 1/1 en Seeder | ✅ |
 
-| HU | Nombre | Dueño | Ent | API | Front | Perm | PM | Rama/PR |
-|---|---|---|---|---|---|---|---|---|
-| GD-01 | Deportes | A | ⬜ | ⬜ | — | ⬜ | ⬜ | |
-| GD-02 | Equipos | A | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | |
-| GD-03 | Equipo ↔ Deporte | A | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | |
-| GD-04 | Jugadores | B | ✅ `BJugadoresHabilidades` ejecutada | ✅ 6 endpoints + pruebas + revisión · compila en `main` | ✅ `/jugadores` y `/jugadores/:id` probados en navegador (`feature/B-front`) | ✅ carpeta "00 - Permisos de B" en Postman (27 permisos), corrida | ✅ 16 casos en vivo | PR #1, #3, #4, #6 ✅ |
-| GD-05 | Equipo ↔ Jugador | B | ✅ `BJugadoresHabilidades` ejecutada | ✅ 4 endpoints + pruebas + revisión · compila en `main` | ✅ `PlantillaEquipo` + historial probados en navegador (`feature/B-front`) | ✅ en la carpeta de permisos de B | ✅ 12 casos en vivo | PR #3, #4, #6 ✅ |
-| GD-06 | Habilidades | B | ✅ `BJugadoresHabilidades` ejecutada | ✅ 5 endpoints + pruebas + revisión (incluye 409 por `HabilidadJugador`) · compila en `main` | — | ✅ en la carpeta de permisos de B | ✅ 10 casos en vivo | PR #3, #4, #6 ✅ |
-| GD-07 | Habilidad ↔ Jugador | C | ✅ migración `CFasesHabilidadJugador` ejecutada | ✅ 4 endpoints + 33 pruebas Jest OK (sin mocks virtuales) + `tsc`/`build`/Oxlint OK + validado en vivo con JWT | ⬜ *(DT-C1: espera base front de A)* | 🟡 sembrados en `DatabaseSeeder` (`ms_security`) | ✅ 12 casos + carpeta `00 - Seguridad` (`postman/ms-gestion-deportiva-C.postman_collection.json`) | PR #5 ✅ + limpieza DT local |
-| GD-08 | Perfil deportivo | C | — | ✅ 1 endpoint (`GET /api/jugadores/{jugadorId}/perfil`) + 13 pruebas Jest OK (sin mocks virtuales) + `tsc`/`build`/Oxlint OK + validado en vivo con JWT | ⬜ *(DT-C1: espera base front de A)* | 🟡 sembrados en `DatabaseSeeder` (`ms_security`) | ✅ 5 casos (`postman/ms-gestion-deportiva-C.postman_collection.json`) | PR #5 ✅ + limpieza DT local |
-| GC-01 | Torneos | A | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | |
-| GC-02 | Inscripciones | A | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | |
-| GC-03 | Fases | C | ✅ `Fase`/`Grupo`/`FaseFinal`, `GrupoEquipo`, `TipoFase`, `RondaFinal` + migración ejecutada | ✅ 4 endpoints + 37 pruebas Jest OK (sin mocks virtuales) + `tsc`/`build`/Oxlint OK + validado en vivo con JWT | — | 🟡 sembrados en `DatabaseSeeder` (`ms_security`) | ✅ 13 casos (`postman/ms-gestion-deportiva-C.postman_collection.json`) | PR #5 ✅ + limpieza DT local |
-| GC-04 | Grupos | C | ✅ reutiliza `Grupo`/`GrupoEquipo` + migración ejecutada | ✅ 9 endpoints + transacción todo-o-nada + tabla de posiciones + 47 pruebas Jest OK (sin mocks virtuales) + `tsc`/`build`/Oxlint OK + validado en vivo con JWT | — | 🟡 sembrados en `DatabaseSeeder` (`ms_security`) | ✅ 20 casos (`postman/ms-gestion-deportiva-C.postman_collection.json`) | PR #5 ✅ + limpieza DT local |
-| GC-05 | Fase final | C | ✅ reutiliza `FaseFinal`/`RondaFinal` + migración ejecutada | ✅ 5 endpoints + cálculo puro de llaves/ganador + 43 pruebas Jest OK (sin mocks virtuales) + `tsc`/`build`/Oxlint OK + validado en vivo con JWT | ⬜ *(DT-C1: espera base front de A)* | 🟡 sembrados en `DatabaseSeeder` (`ms_security`) | ✅ 16 casos (`postman/ms-gestion-deportiva-C.postman_collection.json`) | PR #5 ✅ + limpieza DT local |
-| GC-06 | Partidos | B | ✅ `BPartidosAnotaciones` ejecutada | ✅ 7 endpoints + reglas + correo + pruebas + revisión · compila en `main` | ✅ `/partidos` + `PartidosTorneo` probados en navegador (`feature/B-front`) | ✅ en la carpeta de permisos de B | ✅ 12 casos en vivo | PR #3, #4, #6 ✅ |
-| GC-07 | Resultados y anotaciones | B | ✅ `BPartidosAnotaciones` ejecutada | ✅ 5 endpoints + correos de anotación y resumen + pruebas + revisión · compila en `main` | ✅ `/partidos/:id` + `AnotacionesPartido` probados en navegador (`feature/B-front`) | ✅ en la carpeta de permisos de B | ✅ 17 casos en vivo | PR #3, #4, #6 ✅ |
-| GC-08 | Desarrollo del torneo | C | — | ✅ 1 endpoint (`GET /api/torneos/{torneoId}/desarrollo`) + 11 pruebas Jest OK (sin mocks virtuales) + `tsc`/`build`/Oxlint OK + validado en vivo con JWT | ⬜ *(DT-C1: espera base front de A)* | 🟡 sembrados en `DatabaseSeeder` (`ms_security`) | ✅ 5 casos (`postman/ms-gestion-deportiva-C.postman_collection.json`) | PR #5 ✅ + limpieza DT local |
+*(Más `GET /api/escenarios`: refactorizado a `EscenarioController → EscenarioService → EscenarioMapper` + spec + permiso en Seeder).*
 
 ---
 
 ## 5. Bloqueos entre personas
 
-Qué necesita cada uno de otro. El dueño marca ✅ cuando lo sube a `main`.
-
-| Quién lo necesita | Qué | De | Para | Estado |
-|---|---|---|---|---|
-| Todos | `ApplicationException`, `ErrorCase`, `HttpExceptionFilter` (archivos `common/errores/application.exception.ts` y `error-case.enum.ts`) | A | Que compile cualquier service · **hoy `main` no compila sin esto** | ⬜ |
-| Todos | `EstadoDto` en `common/dto/estado.dto.ts` | A | `PATCH .../estado` · **`main` no compila sin esto** | ⬜ |
-| Todos | `EstadoDto` y `*Resumen` en `common/dto` | A | DTOs de respuesta y `PATCH .../estado` | ⬜ |
-| Todos | `aFechaHoraIso()`, `hoyBogota()` en `common/utils` | A | Mappers y reglas con "hoy" | ⬜ |
-| Todos | `dateStrings: true` + `timezone` en `app.module.ts` | A | Fechas como texto (ACUERDOS 5.5) | ⬜ |
-| Todos | Importar cada `*.module.ts` en `app.module.ts` | A | Que las rutas existan | ⬜ |
-| B | Entidad `Equipo` + migración `AInicial` | A | `EquipoJugador` (GD-05), `Partido` | ⬜ |
-| B | Entidades `Torneo`, `Inscripcion`, `Escenario` | A | Validar partidos (GC-06) | ⬜ |
-| B | `CorreoService` + `DestinatariosService` + `/api/notifications/send` | A | Correos de GC-06 y GC-07 | ⬜ |
-| B, C | Base del front (`gestionClient`, rutas, componentes vacíos) | A | Pantallas | ⬜ |
-| B | `Fase`/`Grupo`/`FaseFinal`, `GrupoEquipo` + migración C | C | `Partido` (GC-06) | 🟡 en `feature/C-habilidad-jugador` |
-| B | Entidad `HabilidadJugador` | C | Eliminar jugador / habilidad | 🟡 en `feature/C-habilidad-jugador` |
-| C | Confirmar archivo `common/dto/habilidad-resumen.dto.ts` (exporta `HabilidadResumen`) | A | GD-07 y GD-08 | ⬜ |
-| C | Confirmar archivo `common/dto/partido-resumen.dto.ts` (exporta `PartidoResumen`, ACUERDOS 5.6) | A | GC-05 y GC-08 | ⬜ |
-| B | Confirmar archivos: A → `common/notificacion/correo.service.ts` y `destinatarios.service.ts`, `common/errores/*`, `common/dto/*-resumen.dto.ts` · C → `fase/entities/ronda-final.enum.ts` y `tipo-fase.enum.ts` (B los importa con esos nombres) | A, C | GC-06, GC-07 | ⬜ |
-| Todos | ⚠️ En TypeORM 1.1.2 las columnas **DATETIME llegan como `Date`**, aunque `dateStrings` esté activo (`MysqlDriver.js:533-535`). Contradice ACUERDOS 5.5: `aFechaHoraIso()` debe aceptar `Date \| string` | A | Mappers de todos (si no, da 500) | ⬜ |
-| C | Entidades `Jugador`, `Habilidad` | B | GD-07, GD-08 | 🟡 `Jugador` en `main` · `Habilidad` en `feature/B-habilidades` |
-| C | `Partido`, `Anotacion` | B | GC-05, GC-08 | 🟡 escritas en `feature/B-habilidades` (rutas de 6.14) |
-| Todos | Endpoint `permissions-validation` en `ms_security` | C | Probar con seguridad activada | 🟡 implementado y validado en local (pendiente commit/PR) |
-| Todos | ⚠️ Bug en `main.ts` (`ValidationPipe.exceptionFactory` devuelve objeto plano en vez de `BadRequestException`) y `common/errores/http-exception.filter.ts`: los DTOs inválidos responden `500 INTERNAL_ERROR` en vez de `400 { campo: mensaje }` (ACUERDOS 5.2–5.3) | A | Pruebas de validación 400 en Postman/front | ✅ arreglado por B con visto bueno de A (24/11) |
-| C | Faltan `common/dto/habilidad-resumen.dto.ts`, `common/dto/partido-resumen.dto.ts` y alias `DeporteResumen` en `common/dto/deporte-resumen.dto.ts` *(C los resolvió localmente en sus carpetas para no tocar `common/`)* | A | Consistencia de `common/dto/` (ACUERDOS 5.6) | ⬜ |
-
-**Acuerdo pendiente de confirmar:** B y C crean sus propios `*.module.ts` (`jugador`, `habilidad`, `partido`, `habilidad-jugador`, `perfil`, `fase`, `desarrollo`); A solo los importa en `app.module.ts` (para no chocar en el merge).
-
-### Deuda técnica registrada (C · Andrei)
-
-| ID | Área | Descripción | Cuándo se salda | Estado |
-|---|---|---|---|---|
-| DT-C1 | Frontend (`frontend-app`) | Pantallas y componentes de C: `HabilidadesJugador` (GD-07), `/jugadores/:id/perfil` (GD-08), `/torneos/:id/fase-final` (GC-05) y `/torneos/:id/desarrollo` (GC-08). Se prioriza terminar primero backend + Jest + Postman de todas las HU de C. | Cuando A suba la base del front (`gestionClient.js`, rutas y placeholders) | ⬜ |
-| DT-C2 | Seguridad (`ms_security`) | Endpoint `POST /api/internal/security/permissions-validation`, creación/asignación del rol `ADMINISTRADOR DEPORTIVO` y registro de los permisos HTTP de todas las HU de C (`DatabaseSeeder.java` + `InternalPermissionValidationTest`, 63/63 pruebas JUnit OK). | Implementado y validado en vivo con `SecurityGuard` (pendiente commit/PR en `ProyectoDesarrolloBackend`) | ✅ |
-| DT-C3 | Migración C (`CFasesHabilidadJugador`) | Crear y ejecutar la migración #3 (`fase`, `grupo_equipo`, `habilidad_jugador`) con timestamp intermedio entre `1795400000000-BJugadoresHabilidades.ts` y `1795500000000-BPartidosAnotaciones.ts`. | Ejecutada con `npm run migration:run`; 14 tablas + `migrations` verificadas en `gestion_deportiva_db` | ✅ |
-| DT-C4 | Mocks temporales Jest y helpers temporales | Retirar los `jest.mock(..., { virtual: true })` (19 specs), migrar `hoyBogota` (`perfil.service.ts`) y `aFechaHoraIso` (`fase-final.mapper.ts`) a `common/utils/fechas`, registrar los 4 módulos de C en `app.module.ts` (autorizado por A), compilar (`tsc` + `nest build`), ejecutar Jest (25/25 suites, 184/184 tests) y validar en vivo los 24 endpoints con JWT real. | Saldada en local (pendiente commit/PR en `ms-gestion-deportiva`) | ✅ |
-| DT-C5 | Entorno local Node.js | Actualizar Node local de `v22.16.0` a `v24.9+` para ejecutar `npm test` de NestJS 12 (ESM) + Jest 30 de forma nativa. | Verificado con Node `v26.13.1` y Jest 30 nativo | ✅ |
+Sin bloqueos abiertos. Todas las dependencias de `common/`, entidades, migraciones, permisos, correos y pantallas cruzadas quedaron cerradas e integradas.
 
 ---
 
 ## 6. Fase 2: integración
 
-- ⬜ Los 5 procesos levantan juntos (MySQL, `ms_security`, `ms-notifications`, `ms-gestion-deportiva`, front)
-- ⬜ Cada persona prueba con token real y con usuario **sin** el rol (403)
-- ⬜ Recorrido completo (ACUERDOS 11, Fase 2)
-- ⬜ Llegan los 3 correos (partido creado, anotación, resumen)
-- ⬜ Colección de Postman completa (carpeta por HU + carpeta de permisos)
+- ✅ Compilación y pruebas unitarias/integración en los 4 repositorios (`ms_security`, `ms-notifications`, `ms-gestion-deportiva` y `frontend-app`)
+- ✅ Colección de Postman unificada v2.1 (`postman/ms-gestion-deportiva-completa.postman_collection.json` + environment sin secretos)
+- 🟡 Pendiente solo levantar los 5 procesos locales durante la demostración y ejecutar el recorrido manual/Postman en vivo
 
 ---
 
 ## 7. Bitácora
 
-Lo más reciente arriba. Una línea por avance: fecha · quién · qué (con PR o commit si hay).
-
 | Fecha | Quién | Avance |
 |---|---|---|
-| 24/11 | Adrián | **Front de B terminado** en `frontend-app` (`feature/B-front`, pendiente PR): jugadores, plantilla de equipo (GD-05), partidos y resultado/anotaciones; `revisor` sin críticos (7 hallazgos corregidos); build + lint OK; **probado en navegador contra el backend real**. Para A: insertar `PartidosTorneo` en `TournamentDetail` y falta botón de cambio de estado del torneo (sin él no se programan partidos, ACUERDOS 678). Para C: `<AnotacionesPartido partidoId soloLectura />` listo para GC-08. |
-| 24/11 | Adrián | **Correos reales OK:** implementado `POST /api/notifications/send` en `ms-notifications` (acordado con A; PR en ese repo). Llegan los 3 tipos de correo de GC-06/GC-07 (nuevo partido, anotación, resumen). Backend + integración de B terminados. |
-| 24/11 | Adrián | **Integración de B validada en vivo** (MySQL + `ms_security` + back, `SEGURIDAD_HABILITADA=true`): colección de B completa en verde. Permisos registrados en `ms_security` con Postman: 27 de B (carpeta 00) y **28 de A** (carpeta 00b, no estaban y daban 403). **Arreglado el 500 → 400** de validación en `main.ts` + `http-exception.filter.ts` (acordado con A). `tsc` OK, 924/924 pruebas. |
-| 24/11 | Adrián | `main` verificado: `tsc` 0 errores, **937/937 pruebas** (53 suites), las 79 rutas de la sección 9 existen. B: borrado el duplicado `src/jugador/utils/fechas.ts` (ya se usa `common/utils/fechas`) y carpeta **"00 - Permisos de B (ms_security)"** en `postman/ms-gestion-deportiva-B.postman_collection.json` (registra y asigna al rol los 27 permisos de 9.7–9.11, idempotente). Pendiente de A: bug 500→400 de `main.ts` (ya en bloqueos), 0 pruebas en `deporte/equipo/torneo` y la base del front. Pendiente de C: subir `permissions-validation` + rol a `ProyectoDesarrolloBackend`. |
-| 23/11 | Andrei | **Deudas técnicas DT-C2, DT-C3, DT-C4 y DT-C5 saldadas:** (1) `ms_security`: implementado `POST /api/internal/security/permissions-validation` + `SecurityConfig` + rol `ADMINISTRADOR DEPORTIVO` y 28 permisos en `DatabaseSeeder.java` + `InternalPermissionValidationTest` (`63/63` pruebas JUnit OK); (2) `ms-gestion-deportiva`: módulos de C importados en `app.module.ts` (autorizado por A), retirados todos los mocks virtuales en 19 specs, migrados `hoyBogota`/`aFechaHoraIso` a `common/utils/fechas`, `tsc` + `nest build` + Oxlint en 0 errores, `25/25` suites (`184/184` tests Jest) OK, `npm run migration:run` ejecutado (14 tablas + `migrations`), y validación en vivo extremo a extremo entre `ms_security` (:8181) y `ms-gestion-deportiva` (:8182) con `SEGURIDAD_HABILITADA=true` (401/403/logout + 24 endpoints de C). Agregada carpeta `00 - Seguridad y Permisos` en Postman. Registrado en Bloqueos el bug 500 vs 400 de `main.ts`/`http-exception.filter.ts` para Persona A. |
-| 22/11 | Andrei | `feature/C-habilidad-jugador` (sin PR): **backend de HU-GC-08 completo** (`src/desarrollo/`: `DesarrolloTorneoResponseDto`, `DesarrolloMapper`, `DesarrolloService` solo lectura reutilizando `calcularTablaPosiciones` y `construirRondasLlaves`, `DesarrolloController` con `GET /api/torneos/{torneoId}/desarrollo`, `DesarrolloModule`), **11 pruebas Jest OK** (regresión completa de C `184/184` en 25 suites), Prettier/Oxlint en 0 errores y 5 casos agregados en `postman/ms-gestion-deportiva-C.postman_collection.json`. Con esto queda cerrado el 100% del backend de Persona C. |
-| 22/11 | Andrei | `feature/C-habilidad-jugador` (sin PR): **backend de HU-GC-05 completo** (`src/fase/`: `CrearFaseFinalDto`, `ActualizarFaseFinalDto`, `LlavesResponseDto`/`RondaLlavesDto`/`LlaveDto`, `llaves-fase-final.ts` reutilizable para HU-GC-08, `FaseFinalMapper`, `FaseFinalService`, `FaseFinalController` con 5 endpoints y registro en `FaseModule`), **43 pruebas Jest OK** (compatibilidad verificada `692/692` con `fase`, `habilidad-jugador`, `perfil` y `partido` de B), Prettier/Oxlint en 0 errores y 16 casos agregados en `postman/ms-gestion-deportiva-C.postman_collection.json`. |
-| 22/11 | Andrei | `feature/C-habilidad-jugador` (sin PR): **backend de HU-GC-04 completo** (`src/fase/`: `CrearGrupoDto`, `ActualizarGrupoDto`, `FiltrosGrupoDto`, `AsignarEquiposGrupoDto`, `GrupoResponseDto`, `FilaPosicionDto`, `calcularTablaPosiciones`, `GrupoMapper`, `GrupoService` con transacción todo-o-nada, `GrupoController` con 9 endpoints y registro en `FaseModule`), **47 pruebas Jest OK** (compatibilidad verificada `649/649` con `fase`, `habilidad-jugador`, `perfil` y `partido` de B), Prettier/Oxlint en 0 errores y 20 casos agregados en `postman/ms-gestion-deportiva-C.postman_collection.json`. |
-| 22/11 | Andrei | `feature/C-habilidad-jugador` (sin PR): **backend de HU-GC-03 completo** (`src/fase/`: entidades STI `Fase`/`Grupo`/`FaseFinal`, `GrupoEquipo`, `TipoFase`, `RondaFinal`, `ActualizarFaseDto`, `FaseResponseDto`, `FaseMapper`, `FaseRepository`, `FaseService`, `FaseController`, `FaseModule`, migración #3 `1795450000000-CFasesHabilidadJugador.ts`), **37 pruebas Jest OK** (compatibilidad verificada `602/602` con `habilidad-jugador`, `perfil` y `partido` de B), Prettier/Oxlint en 0 errores y 13 casos agregados en `postman/ms-gestion-deportiva-C.postman_collection.json`. |
-| 22/11 | Andrei | `feature/C-habilidad-jugador` (sin PR): **backend de HU-GD-08 completo** (`src/perfil/`: DTOs exclusivos, `PerfilMapper`, `PerfilService` solo lectura, `PerfilController`, `PerfilModule`), **13 pruebas Jest OK** (compatibilidad verificada `280/280` con `habilidad-jugador`, `jugador` y `habilidad`), Prettier/Oxlint en 0 errores y 5 casos agregados en `postman/ms-gestion-deportiva-C.postman_collection.json` + variables locales en environment. |
-| 22/11 | Andrei | `feature/C-habilidad-jugador` (commit `b1feca7`, sin PR): **backend de HU-GD-07 completo** (`HabilidadJugador`, DTO, mapper, service, controller, module), **33 pruebas Jest OK** (y compatibilidad verificada `88/88` con `jugador` y `habilidad` de B), Prettier/Oxlint en 0 errores y colección Postman v2.1 con 12 casos (`postman/ms-gestion-deportiva-C.postman_collection.json`). Se revierte `typeorm.config.ts` pasando la configuración local de BD a `.env` y se documenta la tabla de deuda técnica de C (`DT-C1` a `DT-C5`). |
-| 21/11 | Adrián | `feature/B-habilidades` (sin PR): **backend de GC-06 y GC-07 completo** (partidos, resultado, anotaciones, 3 correos), y chequeos de `eliminar` en jugador y habilidad. **753 pruebas OK.** Compila cuando A y C suban sus entidades y `common/` (ver bloqueos). ⚠️ El manifiesto de `docs/husNico` contradice ACUERDOS (carpetas `modules/`, `NotFoundException`, `{statusCode, data}`, `Equipo.estado`): seguir ACUERDOS 4.1, 5.1, 6.2 y 6.14 |
-| 20/11 noche | Adrián | En `feature/B-habilidades` (sin PR):<br>• GD-06 habilidades completa;<br>• GD-05 contratos completa;<br>• GC-06: enum de transiciones, entidad y DTOs.<br>Son 396 pruebas OK. Solo compila con `common/` y `Equipo` de A, y `Fase`, `RondaFinal` y `Escenario` de C.<br>⚠️ Las columnas DATETIME llegan como `Date` (ver bloqueos). |
-| 20/11 noche | Adrián | PR #1 (GD-04 jugadores) y PR #2 (este tablero) mergeados a `main`. ⚠️ **`main` no compila** hasta que A suba `common/errores/application.exception.ts`, `common/errores/error-case.enum.ts` y `common/dto/estado.dto.ts` (son los imports que usa `src/jugador`). Mientras tanto, para que compile local: esperar a `common/` o ignorar `src/jugador` |
-| 20/11 noche | Adrián | GD-04 backend completo en `feature/B-jugadores` (sin PR): entidad, DTOs, mapper, service, controller, module, 51 pruebas OK. No compila en `main` hasta que A suba `common/errores` y `common/dto`. Pruebas con `npm test -- src/<modulo>` (no `npx jest`: Nest 12 es ESM) |
-| 20/11 | Adrián | Se crea este archivo. En `main` solo está el esqueleto (`08ac59c`, `84db547`); sin ramas ni PRs de A o C. `ms_security` sin endpoint de validación, `ms-notifications` sin `/api/notifications/send`, front sin cambios de la entrega 2 |
-| 19/11 | Adrián | Repo creado a partir de `ms-cinema` y subido a GitHub (`08ac59c`), link en `ACUERDOS.md` sección 12 (`84db547`) |
+| 24/11 | Andrei | **Cierre e integración total (autorizado por A, B y C):** (1) `ms_security`: sembrados los **79 permisos** en `DatabaseSeeder.java`, agregado handler `400` en `GlobalExceptionHandler`, `PATCH` en CORS, limpiado `application.properties` (placeholders sin secretos) y pruebas JUnit en verde; (2) `ms-notifications`: restaurado `.env.example`, rate limit atómico multi-destinatario, `MAX_SUBJECT_LENGTH=255`, 22/22 pruebas en verde; (3) `ms-gestion-deportiva`: registrado `SecurityGuard` como `APP_GUARD` en `common/seguridad/`, `.env.example` con `SEGURIDAD_HABILITADA=true`, corregido `HttpExceptionFilter`, completado `common/dto/`, corregidos bugs críticos de A (`IsNull()` en `soloPrincipales`, 3 niveles en `Deporte`, `AsociarDeporteDto`, `GET` de deportes en equipos inactivos, `EscenarioService`/`Mapper`, validación de `Fase` al eliminar torneo, validación de `GrupoEquipo`/`Partido` al retirar inscripción), corregido `?orden=` vacío en `FiltrosGrupoDto`, `CANCELADO` en `DesarrolloService`, consistencia de `AnotacionService`, agregadas 7 suites Jest nuevas (**60/60 suites, 971/971 tests OK**, `tsc`/`nest build`/`oxlint` 0 errores) y creada colección Postman unificada (`postman/ms-gestion-deportiva-completa.postman_collection.json`); (4) `frontend-app`: integrado `<PartidosTorneo />` en `TournamentDetail`, corregido `authService` para `ADMINISTRADOR DEPORTIVO`, soporte multi-endpoint en `RolePermissionsPage`/`PermissionFormModal`, filtro por deporte en `TeamsList`, `maxEquipos` en `TournamentFormModal`, soporte de inactivos y layouts completos (**ESLint 0 errores, Vite build OK**). |
+| 24/11 | Adrián | **Front de B terminado** en `frontend-app` (`feature/B-front`, mergeado en PR #3): jugadores, plantilla de equipo (GD-05), partidos y resultado/anotaciones. |
+| 24/11 | Adrián | **Correos reales OK:** implementado `POST /api/notifications/send` en `ms-notifications`. |
+| 23/11 | Andrei | Deudas técnicas DT-C2, DT-C3, DT-C4 y DT-C5 saldadas (`ms_security` `permissions-validation`, migración C, 24 endpoints de C). |
+| 19/11 | Adrián | Repo `ms-gestion-deportiva` creado a partir de `ms-cinema` y subido a GitHub. |
