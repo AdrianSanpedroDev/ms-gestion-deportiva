@@ -17,6 +17,446 @@
   },
   "item": [
     {
+      "name": "00 - Permisos de B (ms_security)",
+      "description": "ACUERDOS 10.4: cada fila de 9.7-9.11 es un permiso (method + url con {id}, sin query string; model = primer segmento). Correr esta carpeta UNA vez con ms_security levantado. Es idempotente: si el permiso o la asignación ya existen, los reutiliza.",
+      "item": [
+        {
+          "name": "1. Login administrador de ms_security (200 - guarda {{tokenSeguridad}})",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Guarda el token', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.accessToken).to.be.a('string').and.not.empty;",
+                  "  pm.environment.set('tokenSeguridad', body.accessToken);",
+                  "  // El admin sembrado también tiene ADMINISTRADOR DEPORTIVO: su token sirve para el resto de la colección.",
+                  "  pm.environment.set('token', body.accessToken);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{securityAdminEmail}}\",\n  \"password\": \"{{securityAdminPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{securityBaseUrl}}/api/auth/login",
+              "host": [
+                "{{securityBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "2. Buscar el rol ADMINISTRADOR DEPORTIVO (200 - guarda {{rolDeportivoId}})",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Existe el rol ADMINISTRADOR DEPORTIVO', () => {",
+                  "  const rol = pm.response.json().find((r) => r.name === 'ADMINISTRADOR DEPORTIVO');",
+                  "  pm.expect(rol, \"Créalo antes desde la pantalla Roles (ACUERDOS 10.4)\").to.exist;",
+                  "  pm.environment.set('rolDeportivoId', rol.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenSeguridad}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{securityBaseUrl}}/api/roles",
+              "host": [
+                "{{securityBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "roles"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3. Registrar y asignar los 27 permisos de B (idempotente)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const PERMISOS_B = [\n  {\n    \"method\": \"POST\",\n    \"url\": \"/api/jugadores\",\n    \"model\": \"Jugador\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/jugadores\",\n    \"model\": \"Jugador\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/jugadores/{id}\",\n    \"model\": \"Jugador\"\n  },\n  {\n    \"method\": \"PUT\",\n    \"url\": \"/api/jugadores/{id}\",\n    \"model\": \"Jugador\"\n  },\n  {\n    \"method\": \"PATCH\",\n    \"url\": \"/api/jugadores/{id}/estado\",\n    \"model\": \"Jugador\"\n  },\n  {\n    \"method\": \"DELETE\",\n    \"url\": \"/api/jugadores/{id}\",\n    \"model\": \"Jugador\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/jugadores/{id}/equipos\",\n    \"model\": \"Jugador\"\n  },\n  {\n    \"method\": \"POST\",\n    \"url\": \"/api/equipos/{id}/jugadores\",\n    \"model\": \"Equipo\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/equipos/{id}/jugadores\",\n    \"model\": \"Equipo\"\n  },\n  {\n    \"method\": \"PATCH\",\n    \"url\": \"/api/equipos/{id}/jugadores/{id}/retiro\",\n    \"model\": \"Equipo\"\n  },\n  {\n    \"method\": \"POST\",\n    \"url\": \"/api/habilidades\",\n    \"model\": \"Habilidad\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/habilidades\",\n    \"model\": \"Habilidad\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/habilidades/{id}\",\n    \"model\": \"Habilidad\"\n  },\n  {\n    \"method\": \"PUT\",\n    \"url\": \"/api/habilidades/{id}\",\n    \"model\": \"Habilidad\"\n  },\n  {\n    \"method\": \"DELETE\",\n    \"url\": \"/api/habilidades/{id}\",\n    \"model\": \"Habilidad\"\n  },\n  {\n    \"method\": \"POST\",\n    \"url\": \"/api/fases/{id}/partidos\",\n    \"model\": \"Fase\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/fases/{id}/partidos\",\n    \"model\": \"Fase\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/partidos\",\n    \"model\": \"Partido\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/partidos/{id}\",\n    \"model\": \"Partido\"\n  },\n  {\n    \"method\": \"PUT\",\n    \"url\": \"/api/partidos/{id}\",\n    \"model\": \"Partido\"\n  },\n  {\n    \"method\": \"PATCH\",\n    \"url\": \"/api/partidos/{id}/estado\",\n    \"model\": \"Partido\"\n  },\n  {\n    \"method\": \"DELETE\",\n    \"url\": \"/api/partidos/{id}\",\n    \"model\": \"Partido\"\n  },\n  {\n    \"method\": \"PUT\",\n    \"url\": \"/api/partidos/{id}/resultado\",\n    \"model\": \"Partido\"\n  },\n  {\n    \"method\": \"POST\",\n    \"url\": \"/api/partidos/{id}/anotaciones\",\n    \"model\": \"Partido\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/partidos/{id}/anotaciones\",\n    \"model\": \"Partido\"\n  },\n  {\n    \"method\": \"PUT\",\n    \"url\": \"/api/anotaciones/{id}\",\n    \"model\": \"Partido\"\n  },\n  {\n    \"method\": \"DELETE\",\n    \"url\": \"/api/anotaciones/{id}\",\n    \"model\": \"Partido\"\n  }\n];",
+                  "",
+                  "pm.test('200 OK al listar permisos', () => pm.response.to.have.status(200));",
+                  "",
+                  "const base = pm.environment.get('securityBaseUrl');",
+                  "const rolId = Number(pm.environment.get('rolDeportivoId'));",
+                  "const auth = { key: 'Authorization', value: 'Bearer ' + pm.environment.get('tokenSeguridad') };",
+                  "const json = { key: 'Content-Type', value: 'application/json' };",
+                  "",
+                  "// Lo que ya existe en ms_security, por \"METHOD url\" (así no se duplica: ms_security daría 409).",
+                  "const existentes = new Map();",
+                  "for (const p of pm.response.json()) existentes.set(p.method.toUpperCase() + ' ' + p.url, p.id);",
+                  "",
+                  "function asignar(p, permisoId) {",
+                  "  pm.sendRequest({",
+                  "    url: base + '/api/role-permissions', method: 'POST', header: [auth, json],",
+                  "    body: { mode: 'raw', raw: JSON.stringify({ roleId: rolId, permissionId: permisoId }) },",
+                  "  }, (err, res) => {",
+                  "    pm.test('Asignado al rol: ' + p.method + ' ' + p.url, () => {",
+                  "      pm.expect(err).to.be.null;",
+                  "      pm.expect([201, 409]).to.include(res.code); // 409 = ya estaba asignado",
+                  "    });",
+                  "  });",
+                  "}",
+                  "",
+                  "for (const p of PERMISOS_B) {",
+                  "  const idExistente = existentes.get(p.method + ' ' + p.url);",
+                  "  if (idExistente) { asignar(p, idExistente); continue; }",
+                  "  pm.sendRequest({",
+                  "    url: base + '/api/permissions', method: 'POST', header: [auth, json],",
+                  "    body: { mode: 'raw', raw: JSON.stringify(p) },",
+                  "  }, (err, res) => {",
+                  "    pm.test('Permiso creado: ' + p.method + ' ' + p.url, () => {",
+                  "      pm.expect(err).to.be.null;",
+                  "      pm.expect(res.code).to.eql(201);",
+                  "    });",
+                  "    if (!err && res.code === 201) asignar(p, res.json().id);",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenSeguridad}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{securityBaseUrl}}/api/permissions",
+              "host": [
+                "{{securityBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "permissions"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4. Verificar que el rol tiene los 27 permisos de B (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const PERMISOS_B = [\n  {\n    \"method\": \"POST\",\n    \"url\": \"/api/jugadores\",\n    \"model\": \"Jugador\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/jugadores\",\n    \"model\": \"Jugador\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/jugadores/{id}\",\n    \"model\": \"Jugador\"\n  },\n  {\n    \"method\": \"PUT\",\n    \"url\": \"/api/jugadores/{id}\",\n    \"model\": \"Jugador\"\n  },\n  {\n    \"method\": \"PATCH\",\n    \"url\": \"/api/jugadores/{id}/estado\",\n    \"model\": \"Jugador\"\n  },\n  {\n    \"method\": \"DELETE\",\n    \"url\": \"/api/jugadores/{id}\",\n    \"model\": \"Jugador\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/jugadores/{id}/equipos\",\n    \"model\": \"Jugador\"\n  },\n  {\n    \"method\": \"POST\",\n    \"url\": \"/api/equipos/{id}/jugadores\",\n    \"model\": \"Equipo\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/equipos/{id}/jugadores\",\n    \"model\": \"Equipo\"\n  },\n  {\n    \"method\": \"PATCH\",\n    \"url\": \"/api/equipos/{id}/jugadores/{id}/retiro\",\n    \"model\": \"Equipo\"\n  },\n  {\n    \"method\": \"POST\",\n    \"url\": \"/api/habilidades\",\n    \"model\": \"Habilidad\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/habilidades\",\n    \"model\": \"Habilidad\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/habilidades/{id}\",\n    \"model\": \"Habilidad\"\n  },\n  {\n    \"method\": \"PUT\",\n    \"url\": \"/api/habilidades/{id}\",\n    \"model\": \"Habilidad\"\n  },\n  {\n    \"method\": \"DELETE\",\n    \"url\": \"/api/habilidades/{id}\",\n    \"model\": \"Habilidad\"\n  },\n  {\n    \"method\": \"POST\",\n    \"url\": \"/api/fases/{id}/partidos\",\n    \"model\": \"Fase\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/fases/{id}/partidos\",\n    \"model\": \"Fase\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/partidos\",\n    \"model\": \"Partido\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/partidos/{id}\",\n    \"model\": \"Partido\"\n  },\n  {\n    \"method\": \"PUT\",\n    \"url\": \"/api/partidos/{id}\",\n    \"model\": \"Partido\"\n  },\n  {\n    \"method\": \"PATCH\",\n    \"url\": \"/api/partidos/{id}/estado\",\n    \"model\": \"Partido\"\n  },\n  {\n    \"method\": \"DELETE\",\n    \"url\": \"/api/partidos/{id}\",\n    \"model\": \"Partido\"\n  },\n  {\n    \"method\": \"PUT\",\n    \"url\": \"/api/partidos/{id}/resultado\",\n    \"model\": \"Partido\"\n  },\n  {\n    \"method\": \"POST\",\n    \"url\": \"/api/partidos/{id}/anotaciones\",\n    \"model\": \"Partido\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/partidos/{id}/anotaciones\",\n    \"model\": \"Partido\"\n  },\n  {\n    \"method\": \"PUT\",\n    \"url\": \"/api/anotaciones/{id}\",\n    \"model\": \"Partido\"\n  },\n  {\n    \"method\": \"DELETE\",\n    \"url\": \"/api/anotaciones/{id}\",\n    \"model\": \"Partido\"\n  }\n];",
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const texto = pm.response.text();",
+                  "for (const p of PERMISOS_B) {",
+                  "  pm.test('El rol tiene ' + p.method + ' ' + p.url, () => {",
+                  "    pm.expect(texto).to.include('\"' + p.url + '\"');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenSeguridad}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{securityBaseUrl}}/api/roles/{{rolDeportivoId}}/detail-with-permissions",
+              "host": [
+                "{{securityBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "roles",
+                "{{rolDeportivoId}}",
+                "detail-with-permissions"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "00b - Permisos de A (pendiente de Nicolás)",
+      "description": "Los permisos de 9.1-9.6 le tocan a A (ACUERDOS 10.4) y no estaban registrados: sin ellos \"0. Preparación\" da 403. Autosuficiente: hace su propio login y busca el rol. Idempotente.",
+      "item": [
+        {
+          "name": "1. Login administrador de ms_security (200 - guarda {{tokenSeguridad}})",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Guarda el token', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.accessToken).to.be.a('string').and.not.empty;",
+                  "  pm.environment.set('tokenSeguridad', body.accessToken);",
+                  "  // El admin sembrado también tiene ADMINISTRADOR DEPORTIVO: su token sirve para el resto de la colección.",
+                  "  pm.environment.set('token', body.accessToken);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{securityAdminEmail}}\",\n  \"password\": \"{{securityAdminPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{securityBaseUrl}}/api/auth/login",
+              "host": [
+                "{{securityBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "2. Buscar el rol ADMINISTRADOR DEPORTIVO (200 - guarda {{rolDeportivoId}})",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Existe el rol ADMINISTRADOR DEPORTIVO', () => {",
+                  "  const rol = pm.response.json().find((r) => r.name === 'ADMINISTRADOR DEPORTIVO');",
+                  "  pm.expect(rol, \"Créalo antes desde la pantalla Roles (ACUERDOS 10.4)\").to.exist;",
+                  "  pm.environment.set('rolDeportivoId', rol.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenSeguridad}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{securityBaseUrl}}/api/roles",
+              "host": [
+                "{{securityBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "roles"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3. Registrar y asignar los 28 permisos de A (idempotente)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const PERMISOS_B = [\n  {\n    \"method\": \"POST\",\n    \"url\": \"/api/deportes\",\n    \"model\": \"Deporte\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/deportes\",\n    \"model\": \"Deporte\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/deportes/{id}\",\n    \"model\": \"Deporte\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/deportes/{id}/subdeportes\",\n    \"model\": \"Deporte\"\n  },\n  {\n    \"method\": \"PUT\",\n    \"url\": \"/api/deportes/{id}\",\n    \"model\": \"Deporte\"\n  },\n  {\n    \"method\": \"PATCH\",\n    \"url\": \"/api/deportes/{id}/estado\",\n    \"model\": \"Deporte\"\n  },\n  {\n    \"method\": \"DELETE\",\n    \"url\": \"/api/deportes/{id}\",\n    \"model\": \"Deporte\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/deportes/{id}/equipos\",\n    \"model\": \"Deporte\"\n  },\n  {\n    \"method\": \"POST\",\n    \"url\": \"/api/equipos\",\n    \"model\": \"Equipo\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/equipos\",\n    \"model\": \"Equipo\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/equipos/{id}\",\n    \"model\": \"Equipo\"\n  },\n  {\n    \"method\": \"PUT\",\n    \"url\": \"/api/equipos/{id}\",\n    \"model\": \"Equipo\"\n  },\n  {\n    \"method\": \"PATCH\",\n    \"url\": \"/api/equipos/{id}/estado\",\n    \"model\": \"Equipo\"\n  },\n  {\n    \"method\": \"DELETE\",\n    \"url\": \"/api/equipos/{id}\",\n    \"model\": \"Equipo\"\n  },\n  {\n    \"method\": \"POST\",\n    \"url\": \"/api/equipos/{id}/deportes\",\n    \"model\": \"Equipo\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/equipos/{id}/deportes\",\n    \"model\": \"Equipo\"\n  },\n  {\n    \"method\": \"DELETE\",\n    \"url\": \"/api/equipos/{id}/deportes/{id}\",\n    \"model\": \"Equipo\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/equipos/{id}/torneos\",\n    \"model\": \"Equipo\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/escenarios\",\n    \"model\": \"Escenario\"\n  },\n  {\n    \"method\": \"POST\",\n    \"url\": \"/api/torneos\",\n    \"model\": \"Torneo\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/torneos\",\n    \"model\": \"Torneo\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/torneos/{id}\",\n    \"model\": \"Torneo\"\n  },\n  {\n    \"method\": \"PUT\",\n    \"url\": \"/api/torneos/{id}\",\n    \"model\": \"Torneo\"\n  },\n  {\n    \"method\": \"PATCH\",\n    \"url\": \"/api/torneos/{id}/estado\",\n    \"model\": \"Torneo\"\n  },\n  {\n    \"method\": \"DELETE\",\n    \"url\": \"/api/torneos/{id}\",\n    \"model\": \"Torneo\"\n  },\n  {\n    \"method\": \"POST\",\n    \"url\": \"/api/torneos/{id}/inscripciones\",\n    \"model\": \"Torneo\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/torneos/{id}/inscripciones\",\n    \"model\": \"Torneo\"\n  },\n  {\n    \"method\": \"DELETE\",\n    \"url\": \"/api/torneos/{id}/inscripciones/{id}\",\n    \"model\": \"Torneo\"\n  }\n]; // aquí: lista de A (9.1-9.6)",
+                  "",
+                  "pm.test('200 OK al listar permisos', () => pm.response.to.have.status(200));",
+                  "",
+                  "const base = pm.environment.get('securityBaseUrl');",
+                  "const rolId = Number(pm.environment.get('rolDeportivoId'));",
+                  "const auth = { key: 'Authorization', value: 'Bearer ' + pm.environment.get('tokenSeguridad') };",
+                  "const json = { key: 'Content-Type', value: 'application/json' };",
+                  "",
+                  "// Lo que ya existe en ms_security, por \"METHOD url\" (así no se duplica: ms_security daría 409).",
+                  "const existentes = new Map();",
+                  "for (const p of pm.response.json()) existentes.set(p.method.toUpperCase() + ' ' + p.url, p.id);",
+                  "",
+                  "function asignar(p, permisoId) {",
+                  "  pm.sendRequest({",
+                  "    url: base + '/api/role-permissions', method: 'POST', header: [auth, json],",
+                  "    body: { mode: 'raw', raw: JSON.stringify({ roleId: rolId, permissionId: permisoId }) },",
+                  "  }, (err, res) => {",
+                  "    pm.test('Asignado al rol: ' + p.method + ' ' + p.url, () => {",
+                  "      pm.expect(err).to.be.null;",
+                  "      pm.expect([201, 409]).to.include(res.code); // 409 = ya estaba asignado",
+                  "    });",
+                  "  });",
+                  "}",
+                  "",
+                  "for (const p of PERMISOS_B) {",
+                  "  const idExistente = existentes.get(p.method + ' ' + p.url);",
+                  "  if (idExistente) { asignar(p, idExistente); continue; }",
+                  "  pm.sendRequest({",
+                  "    url: base + '/api/permissions', method: 'POST', header: [auth, json],",
+                  "    body: { mode: 'raw', raw: JSON.stringify(p) },",
+                  "  }, (err, res) => {",
+                  "    pm.test('Permiso creado: ' + p.method + ' ' + p.url, () => {",
+                  "      pm.expect(err).to.be.null;",
+                  "      pm.expect(res.code).to.eql(201);",
+                  "    });",
+                  "    if (!err && res.code === 201) asignar(p, res.json().id);",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenSeguridad}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{securityBaseUrl}}/api/permissions",
+              "host": [
+                "{{securityBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "permissions"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4. Verificar que el rol tiene los 28 permisos de A (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const PERMISOS_B = [\n  {\n    \"method\": \"POST\",\n    \"url\": \"/api/deportes\",\n    \"model\": \"Deporte\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/deportes\",\n    \"model\": \"Deporte\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/deportes/{id}\",\n    \"model\": \"Deporte\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/deportes/{id}/subdeportes\",\n    \"model\": \"Deporte\"\n  },\n  {\n    \"method\": \"PUT\",\n    \"url\": \"/api/deportes/{id}\",\n    \"model\": \"Deporte\"\n  },\n  {\n    \"method\": \"PATCH\",\n    \"url\": \"/api/deportes/{id}/estado\",\n    \"model\": \"Deporte\"\n  },\n  {\n    \"method\": \"DELETE\",\n    \"url\": \"/api/deportes/{id}\",\n    \"model\": \"Deporte\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/deportes/{id}/equipos\",\n    \"model\": \"Deporte\"\n  },\n  {\n    \"method\": \"POST\",\n    \"url\": \"/api/equipos\",\n    \"model\": \"Equipo\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/equipos\",\n    \"model\": \"Equipo\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/equipos/{id}\",\n    \"model\": \"Equipo\"\n  },\n  {\n    \"method\": \"PUT\",\n    \"url\": \"/api/equipos/{id}\",\n    \"model\": \"Equipo\"\n  },\n  {\n    \"method\": \"PATCH\",\n    \"url\": \"/api/equipos/{id}/estado\",\n    \"model\": \"Equipo\"\n  },\n  {\n    \"method\": \"DELETE\",\n    \"url\": \"/api/equipos/{id}\",\n    \"model\": \"Equipo\"\n  },\n  {\n    \"method\": \"POST\",\n    \"url\": \"/api/equipos/{id}/deportes\",\n    \"model\": \"Equipo\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/equipos/{id}/deportes\",\n    \"model\": \"Equipo\"\n  },\n  {\n    \"method\": \"DELETE\",\n    \"url\": \"/api/equipos/{id}/deportes/{id}\",\n    \"model\": \"Equipo\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/equipos/{id}/torneos\",\n    \"model\": \"Equipo\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/escenarios\",\n    \"model\": \"Escenario\"\n  },\n  {\n    \"method\": \"POST\",\n    \"url\": \"/api/torneos\",\n    \"model\": \"Torneo\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/torneos\",\n    \"model\": \"Torneo\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/torneos/{id}\",\n    \"model\": \"Torneo\"\n  },\n  {\n    \"method\": \"PUT\",\n    \"url\": \"/api/torneos/{id}\",\n    \"model\": \"Torneo\"\n  },\n  {\n    \"method\": \"PATCH\",\n    \"url\": \"/api/torneos/{id}/estado\",\n    \"model\": \"Torneo\"\n  },\n  {\n    \"method\": \"DELETE\",\n    \"url\": \"/api/torneos/{id}\",\n    \"model\": \"Torneo\"\n  },\n  {\n    \"method\": \"POST\",\n    \"url\": \"/api/torneos/{id}/inscripciones\",\n    \"model\": \"Torneo\"\n  },\n  {\n    \"method\": \"GET\",\n    \"url\": \"/api/torneos/{id}/inscripciones\",\n    \"model\": \"Torneo\"\n  },\n  {\n    \"method\": \"DELETE\",\n    \"url\": \"/api/torneos/{id}/inscripciones/{id}\",\n    \"model\": \"Torneo\"\n  }\n]; // aquí: lista de A (9.1-9.6)",
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const texto = pm.response.text();",
+                  "for (const p of PERMISOS_B) {",
+                  "  pm.test('El rol tiene ' + p.method + ' ' + p.url, () => {",
+                  "    pm.expect(texto).to.include('\"' + p.url + '\"');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenSeguridad}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{securityBaseUrl}}/api/roles/{{rolDeportivoId}}/detail-with-permissions",
+              "host": [
+                "{{securityBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "roles",
+                "{{rolDeportivoId}}",
+                "detail-with-permissions"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "0. Preparación (datos de A y C)",
       "description": "Crea todo lo que necesitan las HU de B: deporte, equipos, torneo inscrito y cerrado, y un grupo con los dos equipos. Son endpoints de A y C.",
       "item": [
