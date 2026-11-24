@@ -1,0 +1,332 @@
+{
+  "info": {
+    "_postman_id": "d3a91ac0-4b71-4d25-a16f-2e0000000001",
+    "name": "HU-GD-01 CRUD de Deportes",
+    "description": "Colección independiente para probar el CRUD de deportes: crear padre, crear subdeporte, listar, obtener, actualizar, cambiar estado y eliminar.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "1. Crear deporte principal",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const sufijo = String(Date.now()).slice(-6);",
+              "pm.environment.set('deporteNombre', 'Futbol ' + sufijo);",
+              "pm.environment.set('subdeporteNombre', 'Futsala ' + sufijo);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('201 - deporte creado', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.environment.set('deportePadreId', body.id);",
+              "pm.environment.set('deporteId', body.id);",
+              "pm.test('Devuelve el padre como null', () => pm.expect(body.deportePadre).to.eql(null));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{deporteNombre}}\",\n  \"descripcion\": \"Deporte principal creado desde Postman\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/deportes",
+          "host": [ "{{baseUrl}}" ],
+          "path": [ "api", "deportes" ]
+        }
+      }
+    },
+    {
+      "name": "2. Crear subdeporte",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('201 - subdeporte creado', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.environment.set('subdeporteId', body.id);",
+              "pm.environment.set('deporteId', body.id);",
+              "pm.test('Tiene dos niveles', () => pm.expect(body.deportePadre.id).to.eql(Number(pm.environment.get('deportePadreId'))));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{subdeporteNombre}}\",\n  \"descripcion\": \"Subdeporte de un deporte principal\",\n  \"deportePadreId\": {{deportePadreId}}\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/deportes",
+          "host": [ "{{baseUrl}}" ],
+          "path": [ "api", "deportes" ]
+        }
+      }
+    },
+    {
+      "name": "3. Listar deportes",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 - lista obtenida', () => pm.response.to.have.status(200));",
+              "pm.test('Respuesta es un arreglo', () => pm.expect(pm.response.json()).to.be.an('array'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/deportes",
+          "host": [ "{{baseUrl}}" ],
+          "path": [ "api", "deportes" ]
+        }
+      }
+    },
+    {
+      "name": "4. Obtener subdeporte",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 - deporte obtenido', () => pm.response.to.have.status(200));",
+              "pm.test('Incluye deporte padre', () => pm.expect(pm.response.json().deportePadre).to.exist);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/deportes/{{subdeporteId}}",
+          "host": [ "{{baseUrl}}" ],
+          "path": [ "api", "deportes", "{{subdeporteId}}" ]
+        }
+      }
+    },
+    {
+      "name": "5. Listar subdeportes del padre",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 - subdeportes obtenidos', () => pm.response.to.have.status(200));",
+              "pm.test('Incluye el subdeporte creado', () => pm.expect(pm.response.json().some(d => d.id === Number(pm.environment.get('subdeporteId')))).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/deportes/{{deportePadreId}}/subdeportes",
+          "host": [ "{{baseUrl}}" ],
+          "path": [ "api", "deportes", "{{deportePadreId}", "subdeportes" ]
+        }
+      }
+    },
+    {
+      "name": "6. Actualizar subdeporte",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 - deporte actualizado', () => pm.response.to.have.status(200));",
+              "pm.test('Mantiene el padre', () => pm.expect(pm.response.json().deportePadre.id).to.eql(Number(pm.environment.get('deportePadreId'))));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"{{subdeporteNombre}} actualizado\",\n  \"descripcion\": \"Descripción actualizada desde Postman\",\n  \"deportePadreId\": {{deportePadreId}}\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/deportes/{{subdeporteId}}",
+          "host": [ "{{baseUrl}}" ],
+          "path": [ "api", "deportes", "{{subdeporteId}}" ]
+        }
+      }
+    },
+    {
+      "name": "7. Desactivar subdeporte",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 - estado cambiado', () => pm.response.to.have.status(200));",
+              "pm.test('El deporte queda inactivo', () => pm.expect(pm.response.json().activo).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"activo\": false }"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/deportes/{{subdeporteId}}/estado",
+          "host": [ "{{baseUrl}}" ],
+          "path": [ "api", "deportes", "{{subdeporteId}", "estado" ]
+        }
+      }
+    },
+    {
+      "name": "8. Activar subdeporte",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 - estado cambiado', () => pm.response.to.have.status(200));",
+              "pm.test('El deporte queda activo', () => pm.expect(pm.response.json().activo).to.eql(true));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"activo\": true }"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/deportes/{{subdeporteId}}/estado",
+          "host": [ "{{baseUrl}}" ],
+          "path": [ "api", "deportes", "{{subdeporteId}", "estado" ]
+        }
+      }
+    },
+    {
+      "name": "9. Filtro solo principales",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 - filtro aplicado', () => pm.response.to.have.status(200));",
+              "pm.test('No devuelve subdeportes', () => pm.response.json().forEach(d => pm.expect(d.deportePadre).to.eql(null)));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/deportes?soloPrincipales=true",
+          "host": [ "{{baseUrl}}" ],
+          "path": [ "api", "deportes" ],
+          "query": [
+            { "key": "soloPrincipales", "value": "true" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "10. Eliminar subdeporte",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('204 - subdeporte eliminado', () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/deportes/{{subdeporteId}}",
+          "host": [ "{{baseUrl}}" ],
+          "path": [ "api", "deportes", "{{subdeporteId}}" ]
+        }
+      }
+    },
+    {
+      "name": "11. Eliminar deporte principal",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('204 - deporte principal eliminado', () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/deportes/{{deportePadreId}}",
+          "host": [ "{{baseUrl}}" ],
+          "path": [ "api", "deportes", "{{deportePadreId}}" ]
+        }
+      }
+    }
+  ]
+}

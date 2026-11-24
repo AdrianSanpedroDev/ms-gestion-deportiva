@@ -93,7 +93,10 @@ export class DeporteService {
   }
 
   private async buscarPadre(id: number): Promise<Deporte> {
-    const padre = await this.deportes.findOneBy({ id });
+    const padre = await this.deportes.findOne({
+      where: { id },
+      relations: { deportePadre: true },
+    });
     if (!padre) throw new ApplicationException(ErrorCase.NOT_FOUND, `No existe el deporte padre con id ${id}`);
     if (!padre.activo) throw new ApplicationException(ErrorCase.INVALID_OPERATION, 'El deporte padre está inactivo');
     if (padre.deportePadre) throw new ApplicationException(ErrorCase.INVALID_OPERATION, 'Solo se permiten dos niveles de deportes');
